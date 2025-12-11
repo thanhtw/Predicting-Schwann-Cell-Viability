@@ -11,6 +11,11 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+        {{-- Language Switcher --}}
+        <li class="nav-item">
+            <x-language-switcher />
+        </li>
+        
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-person-circle"></i> {{ Auth::user()->FullName }}

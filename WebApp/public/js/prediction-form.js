@@ -88,11 +88,35 @@ class PredictionForm {
     displayResult(result) {
         if (result.success) {
             const accessType = this.options.userType === 'admin' ? '(Admin Access)' : '(User Access)';
+            
+            // 🆕 Check if using MLflow or file-based model
+            const modelSource = result.model_source || 'file';
+            const isMLflow = modelSource === 'mlflow';
+            const cached = result.cached || false;
+            
+            // Build model info HTML
+            let modelInfoHtml = `<i class="bi bi-robot me-1"></i>Prediction completed using <strong>${result.model_used || 'AI model'}</strong> ${accessType}`;
+            
+            if (isMLflow) {
+                // MLflow model with additional info
+                const cacheIcon = cached ? '<i class="bi bi-lightning-fill text-warning"></i>' : '<i class="bi bi-cloud-download text-info"></i>';
+                const cacheText = cached ? '' : 'Loaded from MLflow';
+                
+                modelInfoHtml = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <i class="bi bi-robot me-1"></i>Prediction using <strong>${result.model_used || 'AI model'}</strong> ${accessType}
+                        </div>
+                    </div>
+                    ${result.mlflow_run_id ? `<small class="text-muted d-block mt-1"><i class="bi bi-tag me-1"></i>MLflow Run: ${result.mlflow_run_id.substring(0, 8)}...</small>` : ''}
+                `;
+            }
+            
             this.resultDiv.innerHTML = `
                 <div class="alert alert-success">
                     <h4><i class="bi bi-check-circle"></i> Prediction Result</h4>
                     <p class="mb-2"><strong>Schwann Cell Viability: </strong><span class="result-value">${result.prediction}%</span></p>
-                    <small><i class="bi bi-robot me-1"></i>Prediction completed using <strong>${result.model_used || 'AI model'}</strong> ${accessType}</small>
+                    <small>${modelInfoHtml}</small>
                 </div>
             `;
         } else {
@@ -193,6 +217,11 @@ class PredictionForm {
         const modelBadge = document.getElementById('selectedModelBadge');
         const modelSize = document.getElementById('selectedModelSize');
         
+        // 🆕 MLflow elements
+        const mlflowBadge = document.getElementById('mlflowBadge');
+        const mlflowRunInfo = document.getElementById('mlflowRunInfo');
+        const mlflowRunId = document.getElementById('mlflowRunId');
+        
         if (!modelSelect || !modelInfoCard) return;
         
         const selectedOption = modelSelect.options[modelSelect.selectedIndex];
@@ -200,7 +229,11 @@ class PredictionForm {
         if (selectedOption && selectedOption.value) {
             const libType = selectedOption.dataset.libType || 'unknown';
             const fileSize = selectedOption.dataset.fileSize || 0;
-            const modelNameText = selectedOption.text.split(' (')[0];
+            const modelNameText = selectedOption.text.split(' (')[0].replace('<span class="badge bg-info">MLflow</span>', '').trim();
+            
+            // 🆕 MLflow data
+            const hasMlflow = selectedOption.dataset.hasMlflow === 'true';
+            const mlflowRunIdValue = selectedOption.dataset.mlflowRunId || '';
             
             if (modelName) modelName.textContent = modelNameText;
             if (modelBadge) {
@@ -209,6 +242,19 @@ class PredictionForm {
             }
             if (modelSize) {
                 modelSize.textContent = fileSize > 0 ? `${fileSize}MB` : 'Unknown';
+            }
+            
+            // 🆕 Show/hide MLflow badge and info
+            if (mlflowBadge) {
+                mlflowBadge.style.display = hasMlflow ? 'inline-block' : 'none';
+            }
+            if (mlflowRunInfo && mlflowRunId) {
+                if (hasMlflow && mlflowRunIdValue) {
+                    mlflowRunInfo.style.display = 'block';
+                    mlflowRunId.textContent = mlflowRunIdValue.substring(0, 12) + '...';
+                } else {
+                    mlflowRunInfo.style.display = 'none';
+                }
             }
             
             modelInfoCard.classList.add('show');

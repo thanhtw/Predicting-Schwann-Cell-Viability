@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'predict_service' => [
+        'url' => env('PREDICT_SERVICE_URL', 'http://localhost:5000'),
+    ],
+
 ];

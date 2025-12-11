@@ -21,11 +21,21 @@ class AdminMiddleware
             return redirect()->route('login')->with('error', 'Please login to access this page.');
         }
         
-        if (Auth::user()->role->RoleCode !== 'admin') {
-            // If user is logged in but not admin, show role mismatch page
+        // Allow if user is admin OR has any admin-level permissions
+        $isAdmin = Auth::user()->role->RoleCode === 'admin';
+        $hasAdminPermissions = Auth::user()->hasAnyPermission([
+            'manage_users',
+            'manage_roles', 
+            'manage_models',
+            'manage_dataset',
+            'training_model'
+        ]);
+        
+        if (!$isAdmin && !$hasAdminPermissions) {
+            // User has no admin privileges or permissions
             if ($request->expectsJson()) {
                 return response()->json([
-                    'error' => 'Access denied. Admin privileges required.',
+                    'error' => 'Access denied. Admin privileges or appropriate permissions required.',
                     'role_mismatch' => true,
                     'current_role' => Auth::user()->role->RoleCode,
                     'required_role' => 'admin'

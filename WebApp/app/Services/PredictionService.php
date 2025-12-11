@@ -55,8 +55,8 @@ class PredictionService
 
             $predictionResult = $response->json();
 
-            // Validate response structure
-            if (!isset($predictionResult['viability_score'])) {
+            // Validate response structure (Flask returns 'prediction' key)
+            if (!isset($predictionResult['prediction'])) {
                 throw new \Exception('Invalid prediction response format');
             }
 
@@ -72,7 +72,7 @@ class PredictionService
                 'success' => true,
                 'data' => [
                     'prediction' => $prediction,
-                    'viability_score' => $predictionResult['viability_score'],
+                    'viability_score' => $predictionResult['prediction'], // Flask returns 'prediction' key
                     'confidence' => $predictionResult['confidence'] ?? null,
                     'model_info' => [
                         'name' => $model->ModelName,
@@ -116,7 +116,7 @@ class PredictionService
             'Laminin_peptide_loading' => $inputData['laminin_peptide_loading'],
             'Stimulation_frequency' => $inputData['stimulation_frequency'],
             'Applied_voltage' => $inputData['applied_voltage'],
-            'ViabilityScore' => $predictionResult['viability_score'],
+            'ViabilityScore' => $predictionResult['prediction'], // Flask returns 'prediction' key
             'Confidence' => $predictionResult['confidence'] ?? null,
             'PredictionDate' => now(),
         ]);

@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\MLModel;
 use App\Models\Prediction;
+use App\Models\Permission;
 
 class AdminController extends Controller
 {
@@ -39,7 +40,12 @@ class AdminController extends Controller
     // User Management
     public function users()
     {
-        $users = User::with('role')->where('role_id', 2)->paginate(10);
+        // Only show regular users (non-admin), exclude admin accounts from management
+        $users = User::with('role')
+            ->withCount('predictions')
+            ->where('role_id', '!=', 1) // Exclude admins
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 
@@ -79,9 +85,7 @@ class AdminController extends Controller
 
     public function editUser(User $user)
     {
-        if ($user->role_id === 1) {
-            return redirect()->route('admin.users')->with('error', 'Cannot edit admin user.');
-        }
+        // Allow editing all users including admins to manage roles
         return view('admin.users.edit', compact('user'));
     }
 
@@ -93,6 +97,7 @@ class AdminController extends Controller
             'BirthDate' => 'required|date',
             'Address' => 'required|string|max:255',
             'Username' => 'required|string|max:255|unique:users,Username,' . $user->id,
+            'role_id' => 'required|integer|in:1,2',
         ]);
 
         try {
@@ -102,13 +107,14 @@ class AdminController extends Controller
                 'BirthDate' => $request->BirthDate,
                 'Address' => $request->Address,
                 'Username' => $request->Username,
+                'role_id' => $request->role_id,
             ]);
 
             if (!$updated) {
-                return redirect()->route('admin.users')->with('error', 'Cannot edit admin user.');
+                return redirect()->route('admin.users')->with('error', __('users.role_cannot_change_admin'));
             }
 
-            return redirect()->route('admin.users')->with('success', 'User updated successfully.');
+            return redirect()->route('admin.users')->with('success', __('users.role_updated'));
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -193,7 +199,7 @@ class AdminController extends Controller
     // ML Model Management
     public function models()
     {
-        $models = MLModel::paginate(10);
+        $models = MLModel::with('dataset')->paginate(10);
         return view('admin.models.index', compact('models'));
     }
 
@@ -633,97 +639,18 @@ class AdminController extends Controller
                 ], 503);
             }
 
-            // Prepare model file path (convert relative path to absolute)
-            $modelPath = public_path($selectedModel->FilePath);
-            
-            // Verify model file exists
-            if (!file_exists($modelPath)) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Model file not found on server.'
-                ], 404);
-            }
-
-            // Call Flask API with new format
             $apiUrl = env('PREDICT_SERVICE_URL', 'http://localhost:5000');
             $token = $this->generateApiToken();
-            
-            // Prepare payload with model path and type
-            $payload = [
-                'pc_mxene_loading' => (float)$request->pc_mxene_loading,
-                'laminin_peptide_loading' => (float)$request->laminin_peptide_loading,
-                'stimulation_frequency' => (float)$request->stimulation_frequency,
-                'applied_voltage' => (float)$request->applied_voltage,
-                'model_path' => $modelPath,
-                'model_type' => strtolower($selectedModel->LibType), // Convert to lowercase for API
-            ];
-            
-            // Debug logging (remove in production)
-            \Log::info('Making prediction API call (Admin)', [
-                'url' => $apiUrl . '/predict/model',
-                'token_preview' => substr($token, 0, 50) . '...',
-                'payload' => $payload
-            ]);
-            
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'Content-Type' => 'application/json',
-            ])->post($apiUrl . '/predict/model', $payload);
 
-            // Debug logging
-            \Log::info('API Response (Admin)', [
-                'status' => $response->status(),
-                'body' => $response->body()
-            ]);
-
-            if ($response->successful()) {
-                $responseData = $response->json();
-                $prediction = $responseData['prediction'];
-                
-                // Save prediction to database with admin user
-                Prediction::create([
-                    'user_id' => Auth::id(),
-                    'ml_model_id' => $selectedModel->id,
-                    'MXene' => $request->pc_mxene_loading,
-                    'Peptide' => $request->laminin_peptide_loading,
-                    'Stimulation' => $request->stimulation_frequency,
-                    'Voltage' => $request->applied_voltage,
-                    'Result' => $prediction,
-                    'PredictionDateTime' => now(),
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'prediction' => round($prediction, 2),
-                    'model_used' => $selectedModel->MLMName,
-                    'message' => 'Prediction successful and saved to database!'
-                ]);
+            // 🆕 STRATEGY: Check if model has MLflow tracking
+            if (!empty($selectedModel->mlflow_run_id)) {
+                // ✅ Use MLflow prediction endpoint (NEW - with cache)
+                return $this->predictWithMLflow($selectedModel, $request, $apiUrl, $token);
             } else {
-                $errorMessage = 'Failed to get prediction from API';
-                $responseBody = $response->json();
-                
-                if ($response->status() === 401) {
-                    $errorMessage = 'Authentication failed with prediction service';
-                } elseif ($responseBody && isset($responseBody['error'])) {
-                    $errorMessage = $responseBody['error'];
-                }
-                
-                // Enhanced error logging
-                \Log::error('API call failed (Admin)', [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                    'error_message' => $errorMessage
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'error' => $errorMessage,
-                    'debug_info' => env('APP_DEBUG') ? [
-                        'api_status' => $response->status(),
-                        'api_response' => $response->body()
-                    ] : null
-                ], $response->status());
+                // ✅ Use traditional file-based prediction (OLD)
+                return $this->predictWithFileModel($selectedModel, $request, $apiUrl, $token);
             }
+
         } catch (\Exception $e) {
             \Log::error('Exception in makePrediction (Admin)', [
                 'message' => $e->getMessage(),
@@ -734,6 +661,158 @@ class AdminController extends Controller
                 'success' => false,
                 'error' => 'Error connecting to prediction service: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * 🆕 Predict using MLflow model (with intelligent caching)
+     */
+    private function predictWithMLflow($selectedModel, $request, $apiUrl, $token)
+    {
+        \Log::info('Using MLflow prediction (Admin)', [
+            'model' => $selectedModel->MLMName,
+            'mlflow_run_id' => $selectedModel->mlflow_run_id
+        ]);
+
+        // Prepare features for MLflow API
+        $payload = [
+            'run_id' => $selectedModel->mlflow_run_id,
+            'features' => [
+                'pc_mxene_loading' => (float)$request->pc_mxene_loading,
+                'laminin_peptide_loading' => (float)$request->laminin_peptide_loading,
+                'stimulation_frequency' => (float)$request->stimulation_frequency,
+                'applied_voltage' => (float)$request->applied_voltage,
+            ]
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Content-Type' => 'application/json',
+        ])->post($apiUrl . '/predict/mlflow', $payload);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $prediction = $responseData['prediction'];
+            
+            // Save prediction to database
+            Prediction::create([
+                'user_id' => Auth::id(),
+                'ml_model_id' => $selectedModel->id,
+                'MXene' => $request->pc_mxene_loading,
+                'Peptide' => $request->laminin_peptide_loading,
+                'Stimulation' => $request->stimulation_frequency,
+                'Voltage' => $request->applied_voltage,
+                'Result' => $prediction,
+                'PredictionDateTime' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'prediction' => round($prediction, 2),
+                'model_used' => $selectedModel->MLMName,
+                'model_source' => 'mlflow',  // 🆕 Indicate source
+                'cached' => $responseData['cached'] ?? false,  // 🆕 Cache status
+                'mlflow_run_id' => $selectedModel->mlflow_run_id,
+                'message' => 'Prediction successful (MLflow) and saved to database!'
+            ]);
+        } else {
+            $errorMessage = 'Failed to get prediction from MLflow API';
+            $responseBody = $response->json();
+            
+            if ($responseBody && isset($responseBody['error'])) {
+                $errorMessage = $responseBody['error'];
+            }
+            
+            \Log::error('MLflow prediction failed (Admin)', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => $errorMessage,
+            ], $response->status());
+        }
+    }
+
+    /**
+     * Traditional file-based prediction (backward compatible)
+     */
+    private function predictWithFileModel($selectedModel, $request, $apiUrl, $token)
+    {
+        // Prepare model file path (convert relative path to absolute)
+        $modelPath = public_path($selectedModel->FilePath);
+        
+        // Verify model file exists
+        if (!file_exists($modelPath)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Model file not found on server.'
+            ], 404);
+        }
+
+        \Log::info('Using file-based prediction (Admin)', [
+            'model' => $selectedModel->MLMName,
+            'file_path' => $modelPath
+        ]);
+
+        // Prepare payload with model path and type
+        $payload = [
+            'pc_mxene_loading' => (float)$request->pc_mxene_loading,
+            'laminin_peptide_loading' => (float)$request->laminin_peptide_loading,
+            'stimulation_frequency' => (float)$request->stimulation_frequency,
+            'applied_voltage' => (float)$request->applied_voltage,
+            'model_path' => $modelPath,
+            'model_type' => strtolower($selectedModel->LibType),
+        ];
+        
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Content-Type' => 'application/json',
+        ])->post($apiUrl . '/predict/model', $payload);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $prediction = $responseData['prediction'];
+            
+            // Save prediction to database
+            Prediction::create([
+                'user_id' => Auth::id(),
+                'ml_model_id' => $selectedModel->id,
+                'MXene' => $request->pc_mxene_loading,
+                'Peptide' => $request->laminin_peptide_loading,
+                'Stimulation' => $request->stimulation_frequency,
+                'Voltage' => $request->applied_voltage,
+                'Result' => $prediction,
+                'PredictionDateTime' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'prediction' => round($prediction, 2),
+                'model_used' => $selectedModel->MLMName,
+                'model_source' => 'file',  // 🆕 Indicate source
+                'message' => 'Prediction successful and saved to database!'
+            ]);
+        } else {
+            $errorMessage = 'Failed to get prediction from API';
+            $responseBody = $response->json();
+            
+            if ($response->status() === 401) {
+                $errorMessage = 'Authentication failed with prediction service';
+            } elseif ($responseBody && isset($responseBody['error'])) {
+                $errorMessage = $responseBody['error'];
+            }
+            
+            \Log::error('File-based prediction failed (Admin)', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => $errorMessage,
+            ], $response->status());
         }
     }
 
@@ -763,4 +842,141 @@ class AdminController extends Controller
         // Create proper JWT token using Firebase JWT library
         return JWT::encode($payload, $secretKey, 'HS256');
     }
+
+    // Role & Permission Management
+    public function roles()
+    {
+        $roles = Role::with('permissions')->get();
+        return view('admin.roles.index', compact('roles'));
+    }
+
+    public function showRole(Role $role)
+    {
+        $role->load('permissions');
+        $allPermissions = Permission::all();
+        return view('admin.roles.show', compact('role', 'allPermissions'));
+    }
+
+    public function updateRolePermissions(Request $request, Role $role)
+    {
+        $request->validate([
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,id'
+        ]);
+
+        try {
+            $role->permissions()->sync($request->permissions ?? []);
+            return redirect()->route('admin.roles')->with('success', __('permissions.updated_successfully'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update permissions: ' . $e->getMessage());
+        }
+    }
+
+    // User-specific Permission Management
+    public function showUserPermissions(User $user)
+    {
+        $user->load(['role.permissions', 'userPermissions']);
+        $allPermissions = Permission::all();
+        
+        // Get role permissions for reference
+        $rolePermissions = $user->role->permissions->pluck('id')->toArray();
+        
+        // Get user-specific overrides
+        $userPermissions = $user->userPermissions->mapWithKeys(function ($permission) {
+            return [$permission->id => $permission->pivot->granted];
+        })->toArray();
+        
+        return view('admin.users.permissions', compact('user', 'allPermissions', 'rolePermissions', 'userPermissions'));
+    }
+
+    public function updateUserPermissions(Request $request, User $user)
+    {
+        try {
+            // Decode JSON permissions from hidden input
+            $permissions = json_decode($request->input('permissions', '[]'), true) ?? [];
+            
+            // Sync user permissions with granted/revoked status
+            $syncData = [];
+            foreach ($permissions as $permission) {
+                if (isset($permission['permission_id']) && isset($permission['granted'])) {
+                    $syncData[$permission['permission_id']] = ['granted' => (bool)$permission['granted']];
+                }
+            }
+            
+            $user->userPermissions()->sync($syncData);
+            
+            return redirect()->route('admin.users.permissions', $user)->with('success', 'User permissions updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to update user permissions', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'request_data' => $request->all()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to update user permissions: ' . $e->getMessage());
+        }
+    }
+    
+    // Admin Profile Management
+    public function profile()
+    {
+        $admin = Auth::user();
+        return view('admin.profile.index', compact('admin'));
+    }
+    
+    public function updateProfile(Request $request)
+    {
+        $admin = Auth::user();
+        
+        $request->validate([
+            'FullName' => 'required|string|max:255',
+            'Gender' => 'required|in:Male,Female',
+            'BirthDate' => 'required|date',
+            'Address' => 'required|string|max:255',
+            'Username' => 'required|string|max:255|unique:users,Username,' . $admin->id,
+        ]);
+
+        try {
+            $admin->update([
+                'FullName' => $request->FullName,
+                'Gender' => $request->Gender,
+                'BirthDate' => $request->BirthDate,
+                'Address' => $request->Address,
+                'Username' => $request->Username,
+            ]);
+
+            return redirect()->route('admin.profile')->with('success', __('profile.update_success'));
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', __('profile.update_error') . ': ' . $e->getMessage());
+        }
+    }
+    
+    public function updatePassword(Request $request)
+    {
+        $admin = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        try {
+            // Verify current password
+            if (!Hash::check($request->current_password, $admin->Password)) {
+                return redirect()->back()->with('error', __('profile.current_password_incorrect'));
+            }
+            
+            // Update password
+            $admin->update([
+                'Password' => Hash::make($request->new_password),
+            ]);
+
+            return redirect()->route('admin.profile')->with('success', __('profile.password_success'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', __('profile.password_error') . ': ' . $e->getMessage());
+        }
+    }
 }
+

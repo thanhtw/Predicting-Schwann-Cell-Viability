@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'ML Models')
-@section('page-title', 'ML Models')
+@section('title', __('models.ml_models'))
+@section('page-title', __('models.ml_models'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Models</li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">{{ __('dashboard.title') }}</a></li>
+    <li class="breadcrumb-item active">{{ __('nav.models') }}</li>
 @endsection
 
 @section('sidebar')
@@ -17,30 +17,37 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Machine Learning Models</h3>
+                <h3 class="card-title">{{ __('models.machine_learning_models') }}</h3>
                 <div class="card-tools">
                     <a href="{{ route('admin.models.create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus"></i> Add Model
+                        <i class="bi bi-plus"></i> {{ __('models.add_model') }}
+                    </a>
+                    <a href="{{ route('admin.models.compare') }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-bar-chart-line"></i> {{ __('models.compare_models') }}
+                    </a>
+                    <a href="http://127.0.0.1:5001" class="btn btn-secondary btn-sm" target="_blank">
+                        <i class="bi bi-graph-up"></i> {{ __('models.mlflow_ui') }}
                     </a>
                 </div>
             </div>
             <div class="card-body">
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i>
-                    <strong>Note:</strong> The default system model (<span class="badge badge-primary"><i class="bi bi-star"></i> Default</span>) is protected and cannot be deleted to ensure the system always has a working prediction model.
+                    <strong>{{ __('note') }}:</strong> {{ __('models.default_model_note') }}
                 </div>
                 
                 <div class="table-responsive">
                     <table id="models-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>Model Name</th>
-                                <th>Library Type</th>
+                                <th>{{ __('models.name') }}</th>                            
+                                <th>{{ __('models.library_type') }}</th>
+                                <th>{{ __('models.dataset') }}</th>
                                 <th>MSE</th>
                                 <th>MAE</th>
-                                <th>Status</th>
-                                <th>Predictions</th>
-                                <th>Actions</th>
+                                <th>{{ __('models.status') }}</th>
+                                <th>{{ __('models.predictions') }}</th>
+                                <th>{{ __('models.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,7 +62,7 @@
                                     @endphp
                                     @if($isDefault)
                                         <span class="badge badge-primary ms-1">
-                                            <i class="bi bi-star"></i> Default
+                                            <i class="bi bi-star"></i> {{ __('models.default_badge') }}
                                         </span>
                                     @endif
                                 </td>
@@ -63,24 +70,33 @@
                                     <span class="badge badge-info">{{ $model->LibType }}</span>
                                 </td>
                                 <td>
+                                    @if($model->dataset)
+                                        <span class="badge badge-secondary">
+                                            <i class="bi bi-database"></i> {{ $model->dataset->DatasetName }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">{{ __('models.na') }}</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @if($model->MSEValue !== null)
                                         {{ number_format($model->MSEValue, 4) }}
                                     @else
-                                        <span class="text-muted">N/A</span>
+                                        <span class="text-muted">{{ __('models.na') }}</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($model->MAEValue !== null)
                                         {{ number_format($model->MAEValue, 4) }}
                                     @else
-                                        <span class="text-muted">N/A</span>
+                                        <span class="text-muted">{{ __('models.na') }}</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($model->IsActive)
-                                        <span class="badge badge-success">Active</span>
+                                        <span class="badge badge-success">{{ __('active') }}</span>
                                     @else
-                                        <span class="badge badge-secondary">Inactive</span>
+                                        <span class="badge badge-secondary">{{ __('inactive') }}</span>
                                     @endif
                                 </td>
                                 <td>
@@ -94,7 +110,7 @@
                                 <td>
                                     <div class="d-flex flex-wrap gap-1">
                                         <a href="{{ route('admin.models.edit', $model) }}" class="btn btn-sm btn-info">
-                                            <i class="bi bi-pencil"></i> Edit
+                                            <i class="bi bi-pencil"></i> {{ __('models.edit') }}
                                         </a>
                                         
                                         @php
@@ -105,14 +121,14 @@
                                         @endphp
                                         
                                         @if($isDefault)
-                                            <button type="button" class="btn btn-sm btn-secondary" disabled title="Cannot delete default system model">
-                                                <i class="bi bi-shield-lock"></i> Protected
+                                            <button type="button" class="btn btn-sm btn-secondary" disabled title="{{ __('models.cannot_delete_default') }}">
+                                                <i class="bi bi-shield-lock"></i> {{ __('models.protected') }}
                                             </button>
                                         @else
                                             <button type="button" class="btn btn-sm {{ $predictionCount > 0 ? 'btn-warning' : 'btn-danger' }}" 
                                                     data-bs-toggle="modal" data-bs-target="#deleteModal{{ $model->id }}">
                                                 <i class="bi bi-trash"></i> 
-                                                Delete {{ $predictionCount > 0 ? "({$predictionCount})" : '' }}
+                                                {{ __('models.delete') }} {{ $predictionCount > 0 ? "({$predictionCount})" : '' }}
                                             </button>
                                         @endif
                                     </div>
@@ -149,7 +165,7 @@
                 <div class="modal-header {{ $predictionCount > 0 ? 'bg-warning' : 'bg-danger' }} text-white">
                     <h5 class="modal-title" id="deleteModalLabel{{ $model->id }}">
                         <i class="bi bi-exclamation-triangle"></i>
-                        Delete Model: <span class="text-wrap">{{ $model->MLMName }}</span>
+                        {{ __('models.delete_model') }}: <span class="text-wrap">{{ $model->MLMName }}</span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -157,21 +173,21 @@
                     @if($predictionCount > 0)
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle"></i>
-                            <strong>Warning!</strong> This model has <strong>{{ $predictionCount }}</strong> associated prediction(s).
+                            <strong>{{ __('models.warning') }}</strong> {{ __('models.associated_predictions', ['count' => $predictionCount]) }}
                         </div>
                         
-                        <p>Choose how you want to proceed:</p>
+                        <p>{{ __('models.choose_proceed') }}</p>
                         
                         <div class="row g-2">
                             <div class="col-12 col-md-4">
                                 <div class="card border-secondary h-100">
                                     <div class="card-body text-center d-flex flex-column">
                                         <h6 class="card-title text-secondary">
-                                            <i class="bi bi-shield-check"></i> Safe Option
+                                            <i class="bi bi-shield-check"></i> {{ __('models.safe_option') }}
                                         </h6>
-                                        <p class="card-text small flex-grow-1">Cancel deletion.</p>
+                                        <p class="card-text small flex-grow-1">{{ __('models.cancel_deletion') }}</p>
                                         <button type="button" class="btn btn-secondary btn-sm mt-auto" data-bs-dismiss="modal">
-                                            <i class="bi bi-arrow-left"></i> Cancel
+                                            <i class="bi bi-arrow-left"></i> {{ __('cancel') }}
                                         </button>
                                     </div>
                                 </div>
@@ -180,9 +196,9 @@
                                 <div class="card border-warning h-100">
                                     <div class="card-body text-center d-flex flex-column">
                                         <h6 class="card-title text-warning">
-                                            <i class="bi bi-pause-circle"></i> Deactivate
+                                            <i class="bi bi-pause-circle"></i> {{ __('models.deactivate') }}
                                         </h6>
-                                        <p class="card-text small flex-grow-1">Keep model but make it inactive.</p>
+                                        <p class="card-text small flex-grow-1">{{ __('models.deactivate_desc') }}</p>
                                         <form method="POST" action="{{ route('admin.models.update', $model) }}" class="d-inline mt-auto">
                                             @csrf
                                             @method('PUT')
@@ -190,7 +206,7 @@
                                             <input type="hidden" name="LibType" value="{{ $model->LibType }}">
                                             <!-- Don't include IsActive checkbox to make it false -->
                                             <button type="submit" class="btn btn-warning btn-sm">
-                                                <i class="bi bi-pause"></i> Deactivate
+                                                <i class="bi bi-pause"></i> {{ __('models.deactivate') }}
                                             </button>
                                         </form>
                                     </div>
@@ -200,15 +216,15 @@
                                 <div class="card border-danger h-100">
                                     <div class="card-body text-center d-flex flex-column">
                                         <h6 class="card-title text-danger">
-                                            <i class="bi bi-exclamation-triangle"></i> Force Delete
+                                            <i class="bi bi-exclamation-triangle"></i> {{ __('models.force_delete') }}
                                         </h6>
-                                        <p class="card-text small flex-grow-1">Delete model AND all {{ $predictionCount }} prediction(s).</p>
+                                        <p class="card-text small flex-grow-1">{{ __('models.force_delete_desc', ['count' => $predictionCount]) }}</p>
                                         <form method="POST" action="{{ route('admin.models.force-delete', $model) }}" class="d-inline mt-auto">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm" 
-                                                    onclick="return confirm('⚠️ FINAL WARNING: This will permanently delete the model and ALL {{ $predictionCount }} predictions. This cannot be undone! Are you absolutely sure?')">
-                                                <i class="bi bi-trash"></i> Force Delete
+                                                    onclick="return confirm(@js(__('models.force_delete_warning', ['count' => $predictionCount])))">
+                                                <i class="bi bi-trash"></i> {{ __('models.force_delete') }}
                                             </button>
                                         </form>
                                     </div>
@@ -219,29 +235,29 @@
                         <div class="mt-3">
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i>
-                                <strong>Alternative:</strong> You can also deactivate this model instead of deleting it by editing the model and unchecking "Active" status.
+                                <strong>{{ __('messages.alternative') }}:</strong> {{ __('models.alternative_tip') }}
                             </small>
                         </div>
                     @else
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i>
-                            This model has no associated predictions. It's safe to delete.
+                            {{ __('models.no_predictions') }}
                         </div>
                         
-                        <p>Are you sure you want to delete the model <strong>"{{ $model->MLMName }}"</strong>?</p>
-                        <p class="text-muted small">This action will permanently remove the model file and database entry.</p>
+                        <p>{{ __('models.confirm_delete') }} <strong>"{{ $model->MLMName }}"</strong>?</p>
+                        <p class="text-muted small">{{ __('models.delete_permanent') }}</p>
                     @endif
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x"></i> Cancel
+                        <i class="bi bi-x"></i> {{ __('cancel') }}
                     </button>
                     @if($predictionCount == 0)
                         <form method="POST" action="{{ route('admin.models.delete', $model) }}" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash"></i> Delete Model
+                                <i class="bi bi-trash"></i> {{ __('models.delete_model') }}
                             </button>
                         </form>
                     @endif

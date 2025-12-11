@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            PermissionSeeder::class,  // Add permissions seeder after roles
             UserSeeder::class,
             MLModelSeeder::class,
             // Add other seeders here as needed

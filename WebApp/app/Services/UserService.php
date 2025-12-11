@@ -68,8 +68,13 @@ class UserService
      */
     public function updateUser(User $user, array $userData): bool
     {
-        // Don't allow updating admin users
-        if ($user->role_id === 1) {
+        // Don't allow downgrading the primary admin account (UserCode: AD00000000)
+        if ($user->UserCode === 'AD00000000' && isset($userData['role_id']) && $userData['role_id'] != 1) {
+            return false;
+        }
+
+        // Don't allow updating admin users' basic info if current user is also admin trying to edit themselves
+        if ($user->role_id === 1 && auth()->id() === $user->id && isset($userData['role_id']) && $userData['role_id'] != 1) {
             return false;
         }
 

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Make Prediction')
-@section('page-title', 'Make Prediction')
+@section('title', __('predict.title'))
+@section('page-title', __('predict.title'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('user.dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Predict</li>
+    <li class="breadcrumb-item"><a href="{{ route('user.dashboard') }}">{{ __('predict.breadcrumb_dashboard') }}</a></li>
+    <li class="breadcrumb-item active">{{ __('predict.breadcrumb_predict') }}</li>
 @endsection
 
 @section('sidebar')
@@ -30,7 +30,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="bi bi-calculator me-2"></i>
-                    Schwann Cell Viability Prediction
+                    {{ __('predict.page_title') }}
                 </h3>
             </div>
             <div class="card-body">
@@ -41,10 +41,10 @@
                     <div class="form-group">
                         <label for="ml_model_id" class="form-label">
                             <i class="bi bi-cpu me-1"></i>
-                            AI Model Selection
+                            {{ __('predict.ai_model_selection') }}
                         </label>
                         <select class="form-control" id="ml_model_id" name="ml_model_id" required>
-                            <option value="">Select a model...</option>
+                            <option value="">{{ __('predict.select_model') }}</option>
                             @foreach($models as $model)
                                 <option value="{{ $model->id }}" 
                                         data-lib-type="{{ $model->LibType }}"
@@ -59,9 +59,9 @@
                         </select>
                         <small class="form-text text-muted" id="model-info">
                             @if($models->count() > 0)
-                                Select an AI model to use for prediction. Default: {{ $models->first()->MLMName }}
+                                {{ __('predict.select_model_info') }} {{ $models->first()->MLMName }}
                             @else
-                                No active models available. Please contact administrator.
+                                {{ __('predict.no_models_available') }}
                             @endif
                         </small>
                         
@@ -74,8 +74,8 @@
                                         <span id="selectedModelName">-</span>
                                     </h6>
                                     <small class="text-muted">
-                                        Library: <span class="model-badge" id="selectedModelBadge">-</span>
-                                        | Size: <strong id="selectedModelSize">-</strong>
+                                        {{ __('predict.library') }} <span class="model-badge" id="selectedModelBadge">-</span>
+                                        | {{ __('predict.size') }} <strong id="selectedModelSize">-</strong>
                                     </small>
                                 </div>
                                 <div class="text-end">
@@ -89,8 +89,8 @@
                         <!-- No Models Available Alert -->
                         <div class="no-models-alert">
                             <i class="bi bi-exclamation-triangle me-2"></i>
-                            <strong>No AI Models Available</strong>
-                            <p class="mb-0 mt-2">There are currently no active AI models in the system. Please contact your administrator to add models.</p>
+                            <strong>{{ __('predict.no_models_alert_title') }}</strong>
+                            <p class="mb-0 mt-2">{{ __('predict.no_models_alert_desc') }}</p>
                         </div>
                     @endif
 
@@ -98,44 +98,44 @@
                     <div class="form-group">
                         <label for="pc_mxene_loading" class="form-label">
                             <i class="bi bi-droplet me-1"></i>
-                            pc-MXene loading
+                            {{ __('predict.pc_mxene_loading') }}
                         </label>
                         <input type="number" step="0.001" class="form-control" id="pc_mxene_loading" 
-                               name="pc_mxene_loading" min="0" max="0.3" placeholder="Enter pc-MXene loading (0 to 0.3)" required>
-                        <small class="form-text text-muted">Concentration in mg/mL</small>
+                               name="pc_mxene_loading" min="0" max="0.3" placeholder="{{ __('predict.pc_mxene_placeholder') }}" required>
+                        <small class="form-text text-muted">{{ __('predict.pc_mxene_unit') }}</small>
                     </div>
 
                     <!-- Laminin peptide loading -->
                     <div class="form-group">
                         <label for="laminin_peptide_loading" class="form-label">
                             <i class="bi bi-capsule me-1"></i>
-                            Laminin peptide loading
+                            {{ __('predict.laminin_peptide_loading') }}
                         </label>
                         <input type="number" step="0.1" class="form-control" id="laminin_peptide_loading" 
-                               name="laminin_peptide_loading" min="0" max="150" placeholder="Enter Laminin peptide loading (0 to 150)" required>
-                        <small class="form-text text-muted">Concentration in μg/mL</small>
+                               name="laminin_peptide_loading" min="0" max="150" placeholder="{{ __('predict.laminin_placeholder') }}" required>
+                        <small class="form-text text-muted">{{ __('predict.laminin_unit') }}</small>
                     </div>
 
                     <!-- Stimulation frequency -->
                     <div class="form-group">
                         <label for="stimulation_frequency" class="form-label">
                             <i class="bi bi-broadcast me-1"></i>
-                            Stimulation frequency
+                            {{ __('predict.stimulation_frequency') }}
                         </label>
                         <input type="number" step="0.1" class="form-control" id="stimulation_frequency" 
-                               name="stimulation_frequency" min="0" max="3" placeholder="Enter stimulation frequency (0 to 3)" required>
-                        <small class="form-text text-muted">Frequency in Hz</small>
+                               name="stimulation_frequency" min="0" max="3" placeholder="{{ __('predict.stimulation_placeholder') }}" required>
+                        <small class="form-text text-muted">{{ __('predict.stimulation_unit') }}</small>
                     </div>
 
                     <!-- Applied voltage -->
                     <div class="form-group">
                         <label for="applied_voltage" class="form-label">
                             <i class="bi bi-lightning me-1"></i>
-                            Applied voltage
+                            {{ __('predict.applied_voltage') }}
                         </label>
                         <input type="number" step="0.1" class="form-control" id="applied_voltage" 
-                               name="applied_voltage" min="0" max="3" placeholder="Enter applied voltage (0 to 3)" required>
-                        <small class="form-text text-muted">Voltage in V</small>
+                               name="applied_voltage" min="0" max="3" placeholder="{{ __('predict.voltage_placeholder') }}" required>
+                        <small class="form-text text-muted">{{ __('predict.voltage_unit') }}</small>
                     </div>
 
                     <!-- Submit Button -->
@@ -144,15 +144,15 @@
                                 id="predictButton" {{ $models->count() === 0 ? 'disabled' : '' }}>
                             <i class="bi bi-calculator me-2"></i>
                             @if($models->count() > 0)
-                                Predict Cell Viability
+                                {{ __('predict.predict_button') }}
                             @else
-                                No Models Available
+                                {{ __('predict.no_models_button') }}
                             @endif
                         </button>
                         @if($models->count() === 0)
                             <small class="form-text text-danger mt-2">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Prediction is disabled until models are available.
+                                {{ __('predict.prediction_disabled') }}
                             </small>
                         @endif
                     </div>
@@ -172,7 +172,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="bi bi-info-circle me-2"></i>
-                    Parameter Guidelines
+                    {{ __('predict.parameter_guidelines') }}
                 </h3>
             </div>
             <div class="card-body">
@@ -180,11 +180,11 @@
                     <div class="parameter-item mb-3">
                         <h6 class="mb-2">
                             <i class="bi bi-cpu text-info me-1"></i>
-                            AI Model Selection
+                            {{ __('predict.ai_model_selection') }}
                         </h6>
                         <p class="mb-2 small">
-                            <strong>Available Models:</strong> {{ $models->count() }}<br>
-                            <strong>Current Selection:</strong> Dynamic based on your choice
+                            <strong>{{ __('predict.available_models') }}</strong> {{ $models->count() }}<br>
+                            <strong>{{ __('predict.current_selection') }}</strong> {{ __('predict.dynamic_selection') }}
                         </p>
                         <div class="small">
                             @foreach($models as $model)
@@ -199,60 +199,60 @@
                 <div class="parameter-item">
                     <h6 class="mb-2">
                         <i class="bi bi-droplet text-primary me-1"></i>
-                        pc-MXene loading
+                        {{ __('predict.pc_mxene_loading') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>Range:</strong> 0 to 0.3 mg/mL<br>
-                        <strong>Description:</strong> Concentration of pc-MXene nanosheets
+                        <strong>{{ __('predict.range') }}</strong> 0 to 0.3 mg/mL<br>
+                        <strong>{{ __('predict.description') }}</strong> {{ __('predict.pc_mxene_desc') }}
                     </p>
                 </div>
 
                 <div class="parameter-item">
                     <h6 class="mb-2">
                         <i class="bi bi-capsule text-success me-1"></i>
-                        Laminin peptide loading
+                        {{ __('predict.laminin_peptide_loading') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>Range:</strong> 0 to 150 μg/mL<br>
-                        <strong>Description:</strong> Concentration of laminin peptide
+                        <strong>{{ __('predict.range') }}</strong> 0 to 150 μg/mL<br>
+                        <strong>{{ __('predict.description') }}</strong> {{ __('predict.laminin_desc') }}
                     </p>
                 </div>
 
                 <div class="parameter-item">
                     <h6 class="mb-2">
                         <i class="bi bi-broadcast text-warning me-1"></i>
-                        Stimulation frequency
+                        {{ __('predict.stimulation_frequency') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>Range:</strong> 0 to 3 Hz<br>
-                        <strong>Description:</strong> Electric stimulation frequency
+                        <strong>{{ __('predict.range') }}</strong> 0 to 3 Hz<br>
+                        <strong>{{ __('predict.description') }}</strong> {{ __('predict.stimulation_desc') }}
                     </p>
                 </div>
 
                 <div class="parameter-item">
                     <h6 class="mb-2">
                         <i class="bi bi-lightning text-danger me-1"></i>
-                        Applied voltage
+                        {{ __('predict.applied_voltage') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>Range:</strong> 0 to 3 V<br>
-                        <strong>Description:</strong> Applied electric voltage
+                        <strong>{{ __('predict.range') }}</strong> 0 to 3 V<br>
+                        <strong>{{ __('predict.description') }}</strong> {{ __('predict.voltage_desc') }}
                     </p>
                 </div>
 
                 <div class="mt-3 p-3 bg-light rounded">
                     <h6 class="text-primary">
                         <i class="bi bi-lightbulb me-1"></i>
-                        Tips
+                        {{ __('predict.tips') }}
                     </h6>
                     <ul class="small mb-0">
                         @if($models->count() > 0)
-                            <li>Different AI models may produce varying results</li>
-                            <li>Select the model that best fits your experiment type</li>
+                            <li>{{ __('predict.tip_models') }}</li>
+                            <li>{{ __('predict.tip_select') }}</li>
                         @endif
-                        <li>Higher concentrations may increase viability</li>
-                        <li>Electric stimulation can enhance cell growth</li>
-                        <li>Optimal parameters vary by experiment</li>
+                        <li>{{ __('predict.tip_concentration') }}</li>
+                        <li>{{ __('predict.tip_stimulation') }}</li>
+                        <li>{{ __('predict.tip_optimal') }}</li>
                     </ul>
                 </div>
             </div>

@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'User Dashboard')
-@section('page-title', 'Dashboard')
+@section('title', __('user_dashboard.title'))
+@section('page-title', __('user_dashboard.dashboard'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active">Dashboard</li>
+    <li class="breadcrumb-item active">{{ __('user_dashboard.dashboard') }}</li>
 @endsection
 
 @section('sidebar')
@@ -17,35 +17,35 @@
     <x-ui.small-box 
         color="info" 
         :value="$totalPredictions" 
-        label="Total Predictions" 
+        :label="__('user_dashboard.total_predictions')" 
         icon="fas fa-calculator" 
         :link="route('user.history')" 
-        linkText="View History" />
+        :linkText="__('user_dashboard.view_history')" />
     
     <x-ui.small-box 
         color="success" 
-        value="Make New" 
-        label="Prediction" 
+        :value="__('user_dashboard.make_new')" 
+        :label="__('user_dashboard.prediction')" 
         icon="fas fa-plus-circle" 
         :link="route('user.predict')" 
-        linkText="Start Predicting" />
+        :linkText="__('user_dashboard.start_predicting')" />
 </div>
 
 <div class="row">
     <div class="col-12">
-        <x-ui.card title="Recent Predictions">
+        <x-ui.card :title="__('user_dashboard.recent_predictions')">
             @if($recentPredictions->count() > 0)
                 <div class="table-responsive">
                     <table id="recent-predictions" class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Model</th>
-                                <th>MXene</th>
-                                <th>Peptide</th>
-                                <th>Stimulation</th>
-                                <th>Voltage</th>
-                                <th>Result (%)</th>
+                                <th>{{ __('user_dashboard.date') }}</th>
+                                <th>{{ __('user_dashboard.model') }}</th>
+                                <th>{{ __('user_dashboard.mxene') }}</th>
+                                <th>{{ __('user_dashboard.peptide') }}</th>
+                                <th>{{ __('user_dashboard.stimulation') }}</th>
+                                <th>{{ __('user_dashboard.voltage') }}</th>
+                                <th>{{ __('user_dashboard.result') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -66,11 +66,11 @@
             @else
                 <div class="text-center py-4">
                     <i class="fas fa-inbox text-muted icon-48"></i>
-                    <h5 class="text-muted mt-2">No predictions yet</h5>
-                    <p class="text-muted">Start by making your first prediction</p>
+                    <h5 class="text-muted mt-2">{{ __('user_dashboard.no_predictions_yet') }}</h5>
+                    <p class="text-muted">{{ __('user_dashboard.start_first_prediction') }}</p>
                     <a href="{{ route('user.predict') }}" class="btn btn-primary">
                         <i class="fas fa-calculator me-1"></i>
-                        Make Prediction
+                        {{ __('user_dashboard.make_prediction') }}
                     </a>
                 </div>
             @endif
@@ -80,15 +80,15 @@
 
 <div class="row">
     <div class="col-12">
-        <x-ui.card title="About Schwann Cell Viability Prediction">
-            <p>This system uses machine learning models to predict Schwann cell viability based on various parameters:</p>
+        <x-ui.card :title="__('user_dashboard.about_title')">
+            <p>{{ __('user_dashboard.about_intro') }}</p>
             <ul>
-                <li><strong>pc-MXene loading:</strong> The concentration of MXene material (0 to 0.03)</li>
-                <li><strong>Laminin peptide:</strong> The amount of laminin peptide used (0 to 5.9)</li>
-                <li><strong>Stimulation frequency:</strong> The frequency of electrical stimulation (0 to 3)</li>
-                <li><strong>Applied voltage:</strong> The voltage applied during the process (0 to 3)</li>
+                <li><strong>{{ __('user_dashboard.param_mxene') }}</strong> {{ __('user_dashboard.param_mxene_desc') }}</li>
+                <li><strong>{{ __('user_dashboard.param_peptide') }}</strong> {{ __('user_dashboard.param_peptide_desc') }}</li>
+                <li><strong>{{ __('user_dashboard.param_stimulation') }}</strong> {{ __('user_dashboard.param_stimulation_desc') }}</li>
+                <li><strong>{{ __('user_dashboard.param_voltage') }}</strong> {{ __('user_dashboard.param_voltage_desc') }}</li>
             </ul>
-            <p>The prediction result shows the percentage viability of Schwann cells under the given conditions.</p>
+            <p>{{ __('user_dashboard.about_result') }}</p>
         </x-ui.card>
     </div>
 </div>

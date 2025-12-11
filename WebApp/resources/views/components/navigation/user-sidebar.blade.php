@@ -2,7 +2,7 @@
 <!-- Brand Logo -->
 <a href="{{ route('user.dashboard') }}" class="brand-link">
     <img src="{{ asset('images/ml.ico') }}" alt="System Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-    <span class="brand-text font-weight-light">Schwann Cell Viability<br>Prediction System</span>
+    <span class="brand-text font-weight-light">{{ __('user_sidebar.system_name') }}</span>
 </a>
 
 <!-- Sidebar -->
@@ -10,33 +10,79 @@
     <!-- Sidebar Menu -->
     <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-            <x-navigation.sidebar-menu :items="[
-                [
-                    'title' => 'Dashboard',
-                    'route' => 'user.dashboard',
-                    'icon' => 'fas fa-tachometer-alt'
-                ],
-                [
-                    'title' => 'Make Prediction',
-                    'route' => 'user.predict',
-                    'icon' => 'fas fa-calculator'
-                ],
-                [
-                    'title' => 'Prediction History',
-                    'route' => 'user.history',
-                    'icon' => 'fas fa-history'
-                ],
-                [
-                    'title' => 'Profile',
+            @php
+                $menuItems = [
+                    [
+                        'title' => __('user_sidebar.dashboard'),
+                        'route' => 'user.dashboard',
+                        'icon' => 'fas fa-tachometer-alt'
+                    ],
+                ];
+                
+                // Add menu items based on permissions
+                if (auth()->user()->hasPermission('make_predictions')) {
+                    $menuItems[] = [
+                        'title' => __('user_sidebar.make_prediction'),
+                        'route' => 'user.predict',
+                        'icon' => 'fas fa-calculator'
+                    ];
+                }
+                
+                if (auth()->user()->hasPermission('view_history')) {
+                    $menuItems[] = [
+                        'title' => __('user_sidebar.prediction_history'),
+                        'route' => 'user.history',
+                        'icon' => 'fas fa-history'
+                    ];
+                }
+                
+                if (auth()->user()->hasPermission('manage_dataset')) {
+                    $menuItems[] = [
+                        'title' => __('user_sidebar.dataset_management'),
+                        'route' => 'admin.datasets.index',
+                        'icon' => 'fas fa-database'
+                    ];
+                }
+                
+                if (auth()->user()->hasPermission('manage_models')) {
+                    $menuItems[] = [
+                        'title' => __('user_sidebar.model_management'),
+                        'route' => 'admin.models',
+                        'icon' => 'fas fa-brain'
+                    ];
+                }
+                
+                if (auth()->user()->hasPermission('manage_users')) {
+                    $menuItems[] = [
+                        'title' => __('user_sidebar.user_management'),
+                        'route' => 'admin.users',
+                        'icon' => 'fas fa-users'
+                    ];
+                }
+                
+                if (auth()->user()->hasPermission('manage_roles')) {
+                    $menuItems[] = [
+                        'title' => __('user_sidebar.roles_permissions'),
+                        'route' => 'admin.roles',
+                        'icon' => 'fas fa-shield-alt'
+                    ];
+                }
+                
+                // Always show Profile and Security
+                $menuItems[] = [
+                    'title' => __('user_sidebar.profile'),
                     'route' => 'user.profile',
                     'icon' => 'fas fa-user'
-                ],
-                [
-                    'title' => 'Security',
+                ];
+                
+                $menuItems[] = [
+                    'title' => __('user_sidebar.security'),
                     'route' => 'user.security',
-                    'icon' => 'fas fa-shield-alt'
-                ]
-            ]" />
+                    'icon' => 'fas fa-lock'
+                ];
+            @endphp
+            
+            <x-navigation.sidebar-menu :items="$menuItems" />
         </ul>
     </nav>
     <!-- /.sidebar-menu -->
@@ -47,7 +93,7 @@
             <li class="nav-item logout-btn">
                 <a href="#" class="nav-link logout-link" data-bs-toggle="modal" data-bs-target="#logoutModal" data-toggle="modal" data-target="#logoutModal">
                     <i class="nav-icon fas fa-sign-out-alt"></i>
-                    <p>Logout</p>
+                    <p>{{ __('user_sidebar.logout') }}</p>
                 </a>
             </li>
         </ul>

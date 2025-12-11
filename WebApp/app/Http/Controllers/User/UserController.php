@@ -82,99 +82,20 @@ class UserController extends Controller
                 ], 503);
             }
 
-            // Prepare model file path (convert relative path to absolute)
-            $modelPath = public_path($selectedModel->FilePath);
-            
-            // Verify model file exists
-            if (!file_exists($modelPath)) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Model file not found on server.'
-                ], 404);
-            }
-
-            // Call Flask API with new format
             $apiUrl = env('PREDICT_SERVICE_URL', 'http://localhost:5000');
             $token = $this->generateApiToken();
-            
-            // Prepare payload with model path and type
-            $payload = [
-                'pc_mxene_loading' => (float)$request->pc_mxene_loading,
-                'laminin_peptide_loading' => (float)$request->laminin_peptide_loading,
-                'stimulation_frequency' => (float)$request->stimulation_frequency,
-                'applied_voltage' => (float)$request->applied_voltage,
-                'model_path' => $modelPath,
-                'model_type' => strtolower($selectedModel->LibType), // Convert to lowercase for API
-            ];
-            
-            // Debug logging (remove in production)
-            \Log::info('Making prediction API call with new format', [
-                'url' => $apiUrl . '/predict/model',
-                'token_preview' => substr($token, 0, 50) . '...',
-                'payload' => $payload
-            ]);
-            
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'Content-Type' => 'application/json',
-            ])->post($apiUrl . '/predict/model', $payload);
 
-            // Debug logging
-            \Log::info('API Response', [
-                'status' => $response->status(),
-                'body' => $response->body()
-            ]);
-
-            if ($response->successful()) {
-                $responseData = $response->json();
-                $prediction = $responseData['prediction'];
-                
-                // Save prediction to database
-                Prediction::create([
-                    'user_id' => Auth::id(),
-                    'ml_model_id' => $selectedModel->id,
-                    'MXene' => $request->pc_mxene_loading,
-                    'Peptide' => $request->laminin_peptide_loading,
-                    'Stimulation' => $request->stimulation_frequency,
-                    'Voltage' => $request->applied_voltage,
-                    'Result' => $prediction,
-                    'PredictionDateTime' => now(),
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'prediction' => round($prediction, 2),
-                    'model_used' => $selectedModel->MLMName,
-                    'message' => 'Prediction successful and saved to database!'
-                ]);
+            // 🆕 STRATEGY: Check if model has MLflow tracking
+            if (!empty($selectedModel->mlflow_run_id)) {
+                // ✅ Use MLflow prediction endpoint (NEW - with cache)
+                return $this->predictWithMLflow($selectedModel, $request, $apiUrl, $token);
             } else {
-                $errorMessage = 'Failed to get prediction from API';
-                $responseBody = $response->json();
-                
-                if ($response->status() === 401) {
-                    $errorMessage = 'Authentication failed with prediction service';
-                } elseif ($responseBody && isset($responseBody['error'])) {
-                    $errorMessage = $responseBody['error'];
-                }
-                
-                // Enhanced error logging
-                \Log::error('API call failed', [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                    'error_message' => $errorMessage
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'error' => $errorMessage,
-                    'debug_info' => env('APP_DEBUG') ? [
-                        'api_status' => $response->status(),
-                        'api_response' => $response->body()
-                    ] : null
-                ], $response->status());
+                // ✅ Use traditional file-based prediction (OLD)
+                return $this->predictWithFileModel($selectedModel, $request, $apiUrl, $token);
             }
+
         } catch (\Exception $e) {
-            \Log::error('Exception in makePrediction', [
+            \Log::error('Exception in makePrediction (User)', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -183,6 +104,158 @@ class UserController extends Controller
                 'success' => false,
                 'error' => 'Error connecting to prediction service: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * 🆕 Predict using MLflow model (with intelligent caching)
+     */
+    private function predictWithMLflow($selectedModel, $request, $apiUrl, $token)
+    {
+        \Log::info('Using MLflow prediction (User)', [
+            'model' => $selectedModel->MLMName,
+            'mlflow_run_id' => $selectedModel->mlflow_run_id
+        ]);
+
+        // Prepare features for MLflow API
+        $payload = [
+            'run_id' => $selectedModel->mlflow_run_id,
+            'features' => [
+                'pc_mxene_loading' => (float)$request->pc_mxene_loading,
+                'laminin_peptide_loading' => (float)$request->laminin_peptide_loading,
+                'stimulation_frequency' => (float)$request->stimulation_frequency,
+                'applied_voltage' => (float)$request->applied_voltage,
+            ]
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Content-Type' => 'application/json',
+        ])->post($apiUrl . '/predict/mlflow', $payload);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $prediction = $responseData['prediction'];
+            
+            // Save prediction to database
+            Prediction::create([
+                'user_id' => Auth::id(),
+                'ml_model_id' => $selectedModel->id,
+                'MXene' => $request->pc_mxene_loading,
+                'Peptide' => $request->laminin_peptide_loading,
+                'Stimulation' => $request->stimulation_frequency,
+                'Voltage' => $request->applied_voltage,
+                'Result' => $prediction,
+                'PredictionDateTime' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'prediction' => round($prediction, 2),
+                'model_used' => $selectedModel->MLMName,
+                'model_source' => 'mlflow',  // 🆕 Indicate source
+                'cached' => $responseData['cached'] ?? false,  // 🆕 Cache status
+                'mlflow_run_id' => $selectedModel->mlflow_run_id,
+                'message' => 'Prediction successful (MLflow) and saved to database!'
+            ]);
+        } else {
+            $errorMessage = 'Failed to get prediction from MLflow API';
+            $responseBody = $response->json();
+            
+            if ($responseBody && isset($responseBody['error'])) {
+                $errorMessage = $responseBody['error'];
+            }
+            
+            \Log::error('MLflow prediction failed (User)', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => $errorMessage,
+            ], $response->status());
+        }
+    }
+
+    /**
+     * Traditional file-based prediction (backward compatible)
+     */
+    private function predictWithFileModel($selectedModel, $request, $apiUrl, $token)
+    {
+        // Prepare model file path (convert relative path to absolute)
+        $modelPath = public_path($selectedModel->FilePath);
+        
+        // Verify model file exists
+        if (!file_exists($modelPath)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Model file not found on server.'
+            ], 404);
+        }
+
+        \Log::info('Using file-based prediction (User)', [
+            'model' => $selectedModel->MLMName,
+            'file_path' => $modelPath
+        ]);
+
+        // Prepare payload with model path and type
+        $payload = [
+            'pc_mxene_loading' => (float)$request->pc_mxene_loading,
+            'laminin_peptide_loading' => (float)$request->laminin_peptide_loading,
+            'stimulation_frequency' => (float)$request->stimulation_frequency,
+            'applied_voltage' => (float)$request->applied_voltage,
+            'model_path' => $modelPath,
+            'model_type' => strtolower($selectedModel->LibType),
+        ];
+        
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Content-Type' => 'application/json',
+        ])->post($apiUrl . '/predict/model', $payload);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $prediction = $responseData['prediction'];
+            
+            // Save prediction to database
+            Prediction::create([
+                'user_id' => Auth::id(),
+                'ml_model_id' => $selectedModel->id,
+                'MXene' => $request->pc_mxene_loading,
+                'Peptide' => $request->laminin_peptide_loading,
+                'Stimulation' => $request->stimulation_frequency,
+                'Voltage' => $request->applied_voltage,
+                'Result' => $prediction,
+                'PredictionDateTime' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'prediction' => round($prediction, 2),
+                'model_used' => $selectedModel->MLMName,
+                'model_source' => 'file',  // 🆕 Indicate source
+                'message' => 'Prediction successful and saved to database!'
+            ]);
+        } else {
+            $errorMessage = 'Failed to get prediction from API';
+            $responseBody = $response->json();
+            
+            if ($response->status() === 401) {
+                $errorMessage = 'Authentication failed with prediction service';
+            } elseif ($responseBody && isset($responseBody['error'])) {
+                $errorMessage = $responseBody['error'];
+            }
+            
+            \Log::error('File-based prediction failed (User)', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => $errorMessage,
+            ], $response->status());
         }
     }
 

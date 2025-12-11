@@ -17,8 +17,10 @@ class User extends Authenticatable
         'BirthDate',
         'Address',
         'Username',
+        'email',
         'Password',
         'role_id',
+        'language',
     ];
 
     protected $hidden = [
@@ -46,5 +48,86 @@ class User extends Authenticatable
     public function predictions()
     {
         return $this->hasMany(Prediction::class);
+    }
+
+    public function datasets()
+    {
+        return $this->hasMany(Dataset::class, 'UploadedBy', 'id');
+    }
+
+    public function trainedModels()
+    {
+        return $this->hasMany(MLModel::class, 'TrainedBy', 'id');
+    }
+
+    /**
+     * User-specific permissions (overrides role permissions)
+     */
+    public function userPermissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions')
+                    ->withPivot('granted')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Check if user has a specific permission.
+     * Priority: User-specific permission > Role permission
+     * Admin role (role_id = 1) always has all permissions.
+     */
+    public function hasPermission($permissionName)
+    {
+        // Admin always has all permissions
+        if ($this->role_id === 1) {
+            return true;
+        }
+        
+        // Check if user has a specific override for this permission
+        $userPermission = $this->userPermissions()->where('name', $permissionName)->first();
+        if ($userPermission) {
+            // Return the override value (granted = true/false)
+            return $userPermission->pivot->granted;
+        }
+        
+        // Fall back to role permissions
+        return $this->role && $this->role->hasPermission($permissionName);
+    }
+
+    /**
+     * Check if user has any of the given permissions.
+     * Admin role (role_id = 1) always has all permissions.
+     */
+    public function hasAnyPermission(array $permissions)
+    {
+        // Admin always has all permissions
+        if ($this->role_id === 1) {
+            return true;
+        }
+        
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if user has all of the given permissions.
+     * Admin role (role_id = 1) always has all permissions.
+     */
+    public function hasAllPermissions(array $permissions)
+    {
+        // Admin always has all permissions
+        if ($this->role_id === 1) {
+            return true;
+        }
+        
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
