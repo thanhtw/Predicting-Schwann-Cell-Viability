@@ -45,6 +45,15 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    /**
+     * Many-to-many relationship with roles (a user can have multiple permission groups)
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles')
+                    ->withTimestamps();
+    }
+
     public function predictions()
     {
         return $this->hasMany(Prediction::class);
@@ -72,7 +81,7 @@ class User extends Authenticatable
 
     /**
      * Check if user has a specific permission.
-     * Priority: User-specific permission > Role permission
+     * Priority: User-specific permission > Any role permission
      * Admin role (role_id = 1) always has all permissions.
      */
     public function hasPermission($permissionName)
@@ -89,7 +98,14 @@ class User extends Authenticatable
             return $userPermission->pivot->granted;
         }
         
-        // Fall back to role permissions
+        // Check permissions from all assigned roles
+        foreach ($this->roles as $role) {
+            if ($role->hasPermission($permissionName)) {
+                return true;
+            }
+        }
+        
+        // Fall back to default role permissions (if exists)
         return $this->role && $this->role->hasPermission($permissionName);
     }
 

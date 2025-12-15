@@ -69,6 +69,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // User-specific permission management
     Route::get('/users/{user}/permissions', [AdminController::class, 'showUserPermissions'])->name('users.permissions')->middleware('permission:manage_users');
     Route::put('/users/{user}/permissions', [AdminController::class, 'updateUserPermissions'])->name('users.permissions.update')->middleware('permission:manage_users');
+    
+    // User permission groups (roles) management
+    Route::get('/users/{user}/roles', [AdminController::class, 'showUserRoles'])->name('users.roles')->middleware('permission:manage_users');
+    Route::put('/users/{user}/roles', [AdminController::class, 'updateUserRoles'])->name('users.roles.update')->middleware('permission:manage_users');
 
     // Model management
     Route::get('/models', [AdminController::class, 'models'])->name('models')->middleware('permission:manage_models');
@@ -129,4 +133,24 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'user'])->group(functi
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::get('/security', [UserController::class, 'security'])->name('security');
     Route::post('/security/change-password', [UserController::class, 'changePassword'])->name('security.change-password');
+    
+    // Dataset Management (only for users with manage_dataset permission)
+    Route::get('/datasets', [UserController::class, 'datasets'])->name('datasets.index')->middleware('permission:manage_dataset');
+    Route::get('/datasets/create', [UserController::class, 'createDataset'])->name('datasets.create')->middleware('permission:manage_dataset');
+    Route::post('/datasets', [UserController::class, 'storeDataset'])->name('datasets.store')->middleware('permission:manage_dataset');
+    Route::get('/datasets/{id}', [UserController::class, 'showDataset'])->name('datasets.show')->middleware('permission:manage_dataset');
+    Route::delete('/datasets/{id}', [UserController::class, 'destroyDataset'])->name('datasets.destroy')->middleware('permission:manage_dataset');
+    Route::get('/datasets/{id}/train', [UserController::class, 'showTrainForm'])->name('datasets.train.form')->middleware('permission:training_model');
+    Route::post('/datasets/{id}/train', [UserController::class, 'trainDataset'])->name('datasets.train')->middleware('permission:training_model');
+    Route::get('/datasets/{id}/augment', [UserController::class, 'showAugmentForm'])->name('datasets.augment.form')->middleware('permission:manage_dataset');
+    Route::post('/datasets/{id}/augment', [UserController::class, 'augmentDataset'])->name('datasets.augment')->middleware('permission:manage_dataset');
+    
+    // Model Management (only for users with manage_models permission)
+    Route::get('/models', [UserController::class, 'models'])->name('models')->middleware('permission:manage_models');
+    Route::get('/models/create', [UserController::class, 'createModel'])->name('models.create')->middleware('permission:manage_models');
+    Route::post('/models', [UserController::class, 'storeModel'])->name('models.store')->middleware('permission:manage_models');
+    Route::get('/models/{model}/edit', [UserController::class, 'editModel'])->name('models.edit')->middleware('permission:manage_models');
+    Route::put('/models/{model}', [UserController::class, 'updateModel'])->name('models.update')->middleware('permission:manage_models');
+    Route::delete('/models/{model}', [UserController::class, 'deleteModel'])->name('models.delete')->middleware('permission:manage_models');
+    Route::post('/models/{model}/test', [UserController::class, 'testModel'])->name('models.test')->middleware('permission:manage_models');
 });

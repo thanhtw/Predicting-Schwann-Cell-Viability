@@ -96,6 +96,12 @@
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
+                                            <a href="{{ route('admin.users.roles', $user) }}" 
+                                               class="dropdown-item">
+                                                <i class="fas fa-users-cog text-primary"></i> Manage Permission Groups
+                                            </a>
+                                        </li>
+                                        <li>
                                             <a href="{{ route('admin.users.permissions', $user) }}" 
                                                class="dropdown-item">
                                                 <i class="fas fa-shield-alt text-success"></i> {{ __('users.manage_permissions') }}

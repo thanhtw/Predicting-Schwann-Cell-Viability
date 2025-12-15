@@ -978,5 +978,47 @@ class AdminController extends Controller
             return redirect()->back()->with('error', __('profile.password_error') . ': ' . $e->getMessage());
         }
     }
+
+    // User Roles Management (Permission Groups)
+    public function showUserRoles(User $user)
+    {
+        $user->load('roles.permissions', 'role');
+        
+        // Get all permission group roles (exclude admin and default user role)
+        $permissionGroups = Role::whereNotIn('id', [1, 2])->with('permissions')->get();
+        
+        // Get currently assigned role IDs
+        $assignedRoleIds = $user->roles->pluck('id')->toArray();
+        
+        return view('admin.users.roles', compact('user', 'permissionGroups', 'assignedRoleIds'));
+    }
+
+    public function updateUserRoles(Request $request, User $user)
+    {
+        $request->validate([
+            'roles' => 'array',
+            'roles.*' => 'exists:roles,id'
+        ]);
+
+        try {
+            // Only sync permission group roles (exclude admin and default user)
+            $roleIds = collect($request->roles ?? [])->filter(function($roleId) {
+                return !in_array($roleId, [1, 2]);
+            })->toArray();
+            
+            $user->roles()->sync($roleIds);
+            
+            return redirect()->route('admin.users.roles', $user)
+                ->with('success', 'Permission groups updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to update user roles', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'request_data' => $request->all()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to update permission groups: ' . $e->getMessage());
+        }
+    }
 }
 

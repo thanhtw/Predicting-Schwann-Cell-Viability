@@ -17,6 +17,15 @@ class Role extends Model
     }
 
     /**
+     * Many-to-many relationship with users (for permission groups)
+     */
+    public function assignedUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_roles')
+                    ->withTimestamps();
+    }
+
+    /**
      * The permissions that belong to the role.
      */
     public function permissions()

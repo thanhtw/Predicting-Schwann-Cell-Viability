@@ -506,6 +506,13 @@
     "permissions.manage_roles": "Manage Roles",
     "permissions.manage_roles_desc": "Can manage roles and permissions",
     
+    "permissions.prediction_user": "Prediction User",
+    "permissions.prediction_user_desc": "Can make predictions, view predictions, and view history",
+    "permissions.dataset_manager": "Dataset Manager",
+    "permissions.dataset_manager_desc": "Can manage datasets",
+    "permissions.model_trainer": "Model Trainer",
+    "permissions.model_trainer_desc": "Can manage datasets, train models, and manage models",
+    
     "permissions.manage_user_permissions": "Manage User Permissions",
     "permissions.user_specific_permissions_for": "User-Specific Permissions for:",
     "permissions.administrator_account": "Administrator Account",

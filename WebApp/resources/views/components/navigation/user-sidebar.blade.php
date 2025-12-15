@@ -39,7 +39,7 @@
                 if (auth()->user()->hasPermission('manage_dataset')) {
                     $menuItems[] = [
                         'title' => __('user_sidebar.dataset_management'),
-                        'route' => 'admin.datasets.index',
+                        'route' => 'user.datasets.index',
                         'icon' => 'fas fa-database'
                     ];
                 }
@@ -47,24 +47,8 @@
                 if (auth()->user()->hasPermission('manage_models')) {
                     $menuItems[] = [
                         'title' => __('user_sidebar.model_management'),
-                        'route' => 'admin.models',
+                        'route' => 'user.models',
                         'icon' => 'fas fa-brain'
-                    ];
-                }
-                
-                if (auth()->user()->hasPermission('manage_users')) {
-                    $menuItems[] = [
-                        'title' => __('user_sidebar.user_management'),
-                        'route' => 'admin.users',
-                        'icon' => 'fas fa-users'
-                    ];
-                }
-                
-                if (auth()->user()->hasPermission('manage_roles')) {
-                    $menuItems[] = [
-                        'title' => __('user_sidebar.roles_permissions'),
-                        'route' => 'admin.roles',
-                        'icon' => 'fas fa-shield-alt'
                     ];
                 }
                 

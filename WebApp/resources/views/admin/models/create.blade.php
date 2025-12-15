@@ -10,7 +10,11 @@
 @endsection
 
 @section('sidebar')
+@if(auth()->user()->role_id == 1)
     <x-navigation.admin-sidebar />
+@else
+    <x-navigation.user-sidebar />
+@endif
 @endsection
 
 @section('content')

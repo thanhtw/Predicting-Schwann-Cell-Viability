@@ -339,4 +339,104 @@ class UserController extends Controller
         // Create proper JWT token using Firebase JWT library
         return JWT::encode($payload, $secretKey, 'HS256');
     }
+
+    // Dataset Management for Users
+    public function datasets()
+    {
+        // Reuse DatasetController logic but through user routes
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->index();
+    }
+
+    public function showDataset($id)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->show($id);
+    }
+
+    public function createDataset()
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->create();
+    }
+
+    public function storeDataset(Request $request)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->store($request);
+    }
+
+    public function destroyDataset($id)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->destroy($id);
+    }
+
+    public function showTrainForm($id)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->showTrainForm($id);
+    }
+
+    public function trainDataset(Request $request, $id)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->train($request, $id);
+    }
+
+    public function showAugmentForm($id)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->showAugmentForm($id);
+    }
+
+    public function augmentDataset(Request $request, $id)
+    {
+        $controller = app(\App\Http\Controllers\DatasetController::class);
+        return $controller->augment($request, $id);
+    }
+
+    // Model Management for Users
+    public function models()
+    {
+        // Reuse AdminController logic but through user routes
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->models();
+    }
+
+    public function createModel()
+    {
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->createModel();
+    }
+
+    public function storeModel(Request $request)
+    {
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->storeModel($request);
+    }
+
+    public function editModel($model)
+    {
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->editModel($model);
+    }
+
+    public function updateModel(Request $request, $model)
+    {
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->updateModel($request, $model);
+    }
+
+    public function deleteModel($model)
+    {
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->deleteModel($model);
+    }
+
+    public function testModel($model)
+    {
+        $controller = app(\App\Http\Controllers\Admin\AdminController::class);
+        return $controller->testModel($model);
+    }
 }
