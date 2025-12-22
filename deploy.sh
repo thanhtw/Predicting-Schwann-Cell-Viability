@@ -81,7 +81,19 @@ if [ "$RESTART" = true ]; then
     exit 0
 fi
 
-# Copy environment file if not exists
+# Create .env.docker from example if not exists
+if [ ! -f ".env.docker" ]; then
+    echo -e "${YELLOW}Creating .env.docker from .env.docker.example...${NC}"
+    if [ -f ".env.docker.example" ]; then
+        cp .env.docker.example .env.docker
+        echo -e "${GREEN}.env.docker created successfully!${NC}"
+    else
+        echo -e "${RED}Error: .env.docker.example not found!${NC}"
+        exit 1
+    fi
+fi
+
+# Copy environment file to WebApp if not exists
 if [ ! -f "WebApp/.env" ]; then
     echo -e "${YELLOW}Copying .env.docker to WebApp/.env...${NC}"
     cp .env.docker WebApp/.env

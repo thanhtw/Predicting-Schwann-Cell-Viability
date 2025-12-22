@@ -47,6 +47,8 @@ This project consists of two main components working together:
 
 ### Quick Docker Setup
 
+> **Note for Fresh Clone**: When you first clone the repository, the deployment script will automatically create `.env.docker` from `.env.docker.example`. You can customize database credentials and other settings in `.env.docker` before running the deployment.
+
 **Windows (PowerShell):**
 ```powershell
 # Deploy with fresh database
@@ -67,6 +69,14 @@ chmod +x deploy.sh
 # Or normal deployment (keeps existing data)
 ./deploy.sh
 ```
+
+### What the Deployment Script Does
+1. ✅ Creates `.env.docker` from example file (if not exists)
+2. ✅ Copies environment config to WebApp
+3. ✅ Builds Docker images
+4. ✅ Starts all services (Laravel, Python API, MySQL, Nginx)
+5. ✅ Runs database migrations and seeders
+6. ✅ Creates default admin/user accounts
 
 ### Access Application
 - 🌐 **Web Application**: http://localhost:52025

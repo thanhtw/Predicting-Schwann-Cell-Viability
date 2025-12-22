@@ -56,7 +56,19 @@ if ($Restart) {
     exit 0
 }
 
-# Copy environment file if not exists
+# Create .env.docker from example if not exists
+if (-not (Test-Path ".env.docker")) {
+    Write-ColorOutput Yellow "Creating .env.docker from .env.docker.example..."
+    if (Test-Path ".env.docker.example") {
+        Copy-Item ".env.docker.example" ".env.docker"
+        Write-ColorOutput Green ".env.docker created successfully!"
+    } else {
+        Write-ColorOutput Red "Error: .env.docker.example not found!"
+        exit 1
+    }
+}
+
+# Copy environment file to WebApp if not exists
 if (-not (Test-Path "WebApp\.env")) {
     Write-ColorOutput Yellow "Copying .env.docker to WebApp\.env..."
     Copy-Item ".env.docker" "WebApp\.env"
