@@ -36,7 +36,7 @@ jobs:
 
       # Bước 3: Cache Composer dependencies để tăng tốc
       - name: Cache Composer Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: WebApp/vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -85,7 +85,7 @@ jobs:
       # Bước 10: Upload coverage report (optional)
       - name: Upload Coverage Report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: laravel-coverage
           path: WebApp/coverage/
@@ -175,14 +175,14 @@ jobs:
           if [ -d "tests" ] && [ "$(ls -A tests)" ]; then
             pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=html
           else
-            echo "⚠️ No test files found, skipping pytest"
+            echo "No test files found, skipping pytest"
           fi
         continue-on-error: true
 
       # Bước 11: Upload coverage report
       - name: Upload Python Coverage
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-coverage
           path: predict-service/htmlcov/
@@ -230,7 +230,7 @@ jobs:
       - name: Validate Docker Compose
         run: |
           docker-compose config
-          echo "✅ Docker Compose configuration is valid"
+          echo "Docker Compose configuration is valid"
 
   # ============================================================================
   # JOB 4: SECURITY SCANNING
