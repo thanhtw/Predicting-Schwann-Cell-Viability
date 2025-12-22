@@ -142,32 +142,43 @@ python run.py        # Runs on http://localhost:5000
 ## 🌟 Key Features
 
 ### User Management
-- ✅ **Role-based Authentication** (Admin/User roles)
-- ✅ **User Registration & Login** with secure sessions
-- ✅ **Admin Panel** for user management
-- ✅ **Profile Management** and password reset
+- ✅ **Role-based Authentication** (Admin/User roles with granular permissions)
+- ✅ **User Login** with secure sessions
+- ✅ **Admin Panel** for user management (CRUD operations)
+- ✅ **Profile Management** and admin password reset
+- ✅ **Multi-language Support** (English, Vietnamese, Chinese)
 
 ### Machine Learning Integration
 - ✅ **Model Upload & Management** through web interface
+- ✅ **MLflow Integration** for experiment tracking
 - ✅ **Dynamic Model Loading** with metadata storage
 - ✅ **Real-time Predictions** via Flask API
 - ✅ **Prediction History** with detailed analytics
-- ✅ **Model Validation** and error handling
+- ✅ **Model Comparison Tool** for performance evaluation
+- ✅ **Model Validation & Testing** before deployment
+
+### Dataset & Training Features
+- ✅ **Dataset Management** (Upload, view, delete datasets)
+- ✅ **Model Training Pipeline** with configurable parameters
+- ✅ **Data Augmentation** capabilities
+- ✅ **Training Progress Tracking** with real-time updates
 
 ### System Administration
-- ✅ **Admin Dashboard** with system overview
-- ✅ **User Management** (CRUD operations)
+- ✅ **Admin Dashboard** with system overview and statistics
+- ✅ **User Management** (Create, edit, delete, anonymize)
+- ✅ **Permission Management** (Role-based & user-specific)
 - ✅ **ML Model Management** with force delete options
-- ✅ **System Monitoring** and health checks
-- ✅ **Data Export** and reporting capabilities
+- ✅ **Email Settings** with test functionality
+- ✅ **System Health Monitoring** for API services
 
 ### Technical Features
-- ✅ **Responsive Design** (Bootstrap 5 + AdminLTE)
-- ✅ **RESTful API Integration** between services
-- ✅ **File Upload Security** with validation
+- ✅ **Responsive Design** (Bootstrap 5 + AdminLTE 3)
+- ✅ **RESTful API Integration** with JWT authentication
+- ✅ **File Upload Security** with size and type validation
 - ✅ **Database Optimization** with proper indexing
-- ✅ **Caching Systems** for performance
-- ✅ **Error Handling** and logging
+- ✅ **Database Caching** for improved performance
+- ✅ **Comprehensive Error Handling** and logging
+- ✅ **API Health Checks** for service availability
 
 ## 📁 Project Structure
 
