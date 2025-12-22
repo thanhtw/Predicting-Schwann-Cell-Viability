@@ -4,12 +4,12 @@
 max-line-length = 127
 max-complexity = 10
 
-# Ignore specific errors
-ignore = 
-    E203,  # Whitespace before ':'
-    E266,  # Too many leading '#' for block comment
-    W503,  # Line break before binary operator
-    W504,  # Line break after binary operator
+# Ignore specific errors:
+# E203 - Whitespace before ':'
+# E266 - Too many leading '#' for block comment
+# W503 - Line break before binary operator
+# W504 - Line break after binary operator
+ignore = E203,E266,W503,W504
 
 # Exclude directories
 exclude =
