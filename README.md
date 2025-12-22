@@ -1,5 +1,11 @@
 # Predicting Schwann Cell Viability - Laravel MVC System
 
+[![CI - Testing & Quality Checks](https://github.com/nguyenhuuluan1702/PCS_MLops/actions/workflows/ci.yml/badge.svg)](https://github.com/nguyenhuuluan1702/PCS_MLops/actions/workflows/ci.yml)
+[![PHP Version](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://www.php.net/)
+[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-brightgreen.svg)](https://www.docker.com/)
+
 A comprehensive web-based machine learning system for predicting Schwann cell viability using artificial neural networks. The system features a Laravel web application with admin panel, user management, and integration with Python Flask-based prediction services.
 
 ## 🏗️ System Architecture
@@ -40,64 +46,113 @@ This project consists of two main components working together:
 ## 🐳 Docker Deployment (Recommended)
 
 ### Quick Docker Setup
-```bash
-# Clone and navigate to project
-git clone https://github.com/kietphung-bit/PredictingSchwannCellViability-Laravel-MVC.git
-cd PredictingSchwannCellViability-Laravel-MVC
 
-#Copy environment file
-#Windows
-Copy-Item .env.docker.example .env.docker
-#Linux/Mac
-cp .env.docker.example .env.docker
+**Windows (PowerShell):**
+```powershell
+# Deploy with fresh database
+.\deploy.ps1 -Fresh
 
-# Build and start all services
-docker-compose up -d --build
-
-# Generate API key for Web App
-docker-compose exec laravel-webapp php artisan key:generate --force
-# Wait for services to be ready (about 30-60 seconds)
-# Then run initial database setup
-docker-compose exec laravel-webapp php artisan migrate --force
-docker-compose exec laravel-webapp php artisan db:seed --force
+# Or normal deployment (keeps existing data)
+.\deploy.ps1
 ```
+
+**Linux/Mac:**
+```bash
+# Make script executable
+chmod +x deploy.sh
+
+# Deploy with fresh database
+./deploy.sh --fresh
+
+# Or normal deployment (keeps existing data)
+./deploy.sh
+```
+
+### Access Application
+- 🌐 **Web Application**: http://localhost:52025
+- 📧 **Admin Login**: admin@example.com / password
+- 📧 **User Login**: user@example.com / password
 
 ### Docker Architecture
 The system uses Docker Compose to orchestrate multiple services:
 
-- **🌐 Laravel WebApp** (Expose 9000): Main web application
-- **🤖 Python API** (Expose 5000): ML prediction service  
-- **🗄️ MySQL Database** (Expose 3306): Data storage
-- **🌐 Nginx** (Port 52025:80): Reverse proxy and load balancer
+- **🌐 Laravel WebApp** (Port 9000): Main web application (PHP-FPM)
+- **🤖 Predict Service** (Port 5000): ML prediction service (Python Flask)
+- **🗄️ MySQL Database** (Port 3306): Data storage (MySQL 8.0)
+- **🌐 Nginx** (Port 52025→80): Reverse proxy and load balancer
 
 ![Docker deployment](images/Docker-deployment.png)
 
-### Docker Services Management
+### Docker Management Commands
+
+**View Logs:**
+```powershell
+# Windows
+.\deploy.ps1 -Logs
+
+# Linux/Mac
+./deploy.sh --logs
+
+# Or use docker-compose directly
+docker-compose logs -f
+docker-compose logs -f laravel-webapp  # Specific service
+```
+
+**Stop Containers:**
+```powershell
+# Windows
+.\deploy.ps1 -Stop
+
+# Linux/Mac
+./deploy.sh --stop
+```
+
+**Restart Containers:**
+```powershell
+# Windows
+.\deploy.ps1 -Restart
+
+# Linux/Mac
+./deploy.sh --restart
+```
+
+**Rebuild Images:**
+```powershell
+# Windows
+.\deploy.ps1 -Build
+
+# Linux/Mac
+./deploy.sh --build
+```
+
+### Advanced Docker Commands
+
 ```bash
-# Start services
-docker-compose up -d
-
-# Stop services
-docker-compose down
-
-# View logs
-docker-compose logs -f [service-name]
-
 # Access containers
 docker-compose exec laravel-webapp bash
-docker-compose exec python-api bash
-docker-compose exec mysql mysql -u root -p
+docker-compose exec predict-service bash
+docker-compose exec mysql bash
 
-# Rebuild specific service
-docker-compose up -d --build [service-name]
+# Laravel artisan commands
+docker-compose exec laravel-webapp php artisan migrate
+docker-compose exec laravel-webapp php artisan cache:clear
+
+# Database access
+docker-compose exec mysql mysql -u laravel_user -pLaravelSecurePass2025! laravel_db
+
+# View container stats
+docker stats
 ```
 
 ### Environment Configuration
-Docker automatically handles environment setup, but you can customize:
+- **Main Config**: `.env.docker` (auto-copied to `WebApp/.env`)
+- **Database Credentials**: Defined in `docker-compose.yml`
+- **Customization**: Copy `.env.docker.example` to `.env.docker` and modify
 
-1. **Laravel Environment**: Check `WebApp/.env.docker`
-2. **Database Configuration**: Defined in `docker-compose.yml`
-3. **Python API Settings**: Configured in `predict-service/app/config/`
+📖 **Full Docker Documentation**: 
+- [Quick Start Guide](QUICK_START_DOCKER.md)
+- [Detailed Deployment Guide](DOCKER_DEPLOYMENT.md)
+- [Commands Cheat Sheet](DOCKER_CHEATSHEET.md)
 
 ### Manual Installation Commands
 
