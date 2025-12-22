@@ -26,9 +26,10 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Assert that a database table has a specific count of records
+     * Assert that a database table has a specific count of records with WHERE conditions
+     * Use assertDatabaseCount() for simple count checks
      */
-    protected function assertDatabaseCount(string $table, int $count, array $where = []): void
+    protected function assertDatabaseCountWhere(string $table, int $count, array $where = []): void
     {
         $query = $this->app['db']->table($table);
         
