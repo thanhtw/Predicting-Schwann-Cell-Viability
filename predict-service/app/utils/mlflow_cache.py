@@ -86,7 +86,8 @@ class MLflowModelCache:
         try:
             # Set MLflow tracking URI
             mlflow_dir = cls._get_mlflow_dir()
-            mlflow.set_tracking_uri(f"file:///{mlflow_dir}")
+            mlflow_dir = os.path.abspath(mlflow_dir)
+            mlflow.set_tracking_uri(f"file://{mlflow_dir}")
             
             # Get run info to determine model flavor
             client = mlflow.tracking.MlflowClient()

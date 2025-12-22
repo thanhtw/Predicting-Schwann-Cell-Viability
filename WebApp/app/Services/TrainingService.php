@@ -392,7 +392,7 @@ class TrainingService
             ]);
 
             // Call Flask API
-            $apiUrl = config('app.prediction_api_url', 'http://localhost:5000') . '/train/model';
+            $apiUrl = config('services.predict_service.url', 'http://predict-service:5000') . '/train/model';
             
             $response = Http::timeout(600) // 10 minutes timeout
                 ->withToken(config('app.prediction_api_token', ''))

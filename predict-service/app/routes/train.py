@@ -187,7 +187,8 @@ def train_model():
         
         # ========== MLFLOW TRACKING START ==========
         mlflow_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mlruns')
-        mlflow.set_tracking_uri(f"file:///{mlflow_dir}")
+        mlflow_dir = os.path.abspath(mlflow_dir)
+        mlflow.set_tracking_uri(f"file://{mlflow_dir}")
         experiment_name = "schwann_cell_viability_training"
         mlflow.set_experiment(experiment_name)
         
@@ -427,7 +428,8 @@ def get_mlflow_experiments():
     try:
         # Set MLflow tracking URI
         mlflow_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mlruns')
-        mlflow.set_tracking_uri(f"file:///{mlflow_dir}")
+        mlflow_dir = os.path.abspath(mlflow_dir)
+        mlflow.set_tracking_uri(f"file://{mlflow_dir}")
         
         client = mlflow.tracking.MlflowClient()
         experiments = client.search_experiments()
@@ -496,7 +498,8 @@ def get_mlflow_runs():
         
         # Set MLflow tracking URI
         mlflow_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mlruns')
-        mlflow.set_tracking_uri(f"file:///{mlflow_dir}")
+        mlflow_dir = os.path.abspath(mlflow_dir)
+        mlflow.set_tracking_uri(f"file://{mlflow_dir}")
         
         # Get experiment
         client = mlflow.tracking.MlflowClient()

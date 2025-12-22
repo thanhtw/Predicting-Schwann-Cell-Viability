@@ -42,7 +42,7 @@ class UserController extends Controller
 
     private function testApiConnection()
     {
-        $apiUrl = env('PREDICT_SERVICE_URL', 'http://localhost:5000');
+        $apiUrl = config('services.predict_service.url', 'http://predict-service:5000');
         try {
             $response = Http::timeout(5)->get($apiUrl . '/predict/health');
             return $response->successful();
@@ -82,7 +82,7 @@ class UserController extends Controller
                 ], 503);
             }
 
-            $apiUrl = env('PREDICT_SERVICE_URL', 'http://localhost:5000');
+            $apiUrl = config('services.predict_service.url', 'http://predict-service:5000');
             $token = $this->generateApiToken();
 
             // 🆕 STRATEGY: Check if model has MLflow tracking

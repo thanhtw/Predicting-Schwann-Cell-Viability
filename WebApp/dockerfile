@@ -44,10 +44,21 @@ RUN chown -R appuser:appgroup /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Switch to non-root user
+# Switch to non-root user for installation
 USER appuser
 
-RUN composer install
+# Install composer dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Switch back to root to fix permissions before running
+USER root
+
+# Ensure proper permissions for runtime
+RUN chown -R appuser:appgroup /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Switch back to appuser
+USER appuser
 
 # Expose port 9000 and start php-fpm
 EXPOSE 9000

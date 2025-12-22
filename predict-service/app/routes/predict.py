@@ -528,7 +528,8 @@ def predict_with_mlflow():
                 
                 # Set MLflow tracking URI
                 mlflow_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mlruns')
-                mlflow.set_tracking_uri(f"file:///{mlflow_dir}")
+                mlflow_dir = os.path.abspath(mlflow_dir)
+                mlflow.set_tracking_uri(f"file://{mlflow_dir}")
                 
                 # Search for latest run với model_name
                 experiment_name = "schwann_cell_viability_training"

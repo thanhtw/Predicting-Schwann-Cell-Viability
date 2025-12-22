@@ -1,13 +1,13 @@
 name: CI - Testing & Quality Checks
 
-# Workflow này chạy tự động khi có Pull Request hoặc Push vào branch main/dev
+# This workflow runs automatically on Pull Request or Push to main/dev branches
 on:
   pull_request:
     branches: [main, dev]
   push:
     branches: [main, dev]
 
-# Cho phép workflow có thể cancel các runs trước đó nếu có commit mới
+# Allow workflow to cancel previous runs if new commit is pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,11 +21,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # Bước 1: Checkout source code
+      # Step 1: Checkout source code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Bước 2: Setup PHP với extensions cần thiết
+      # Step 2: Setup PHP with required extensions
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
@@ -34,7 +34,7 @@ jobs:
           coverage: xdebug
           tools: composer:v2
 
-      # Bước 3: Cache Composer dependencies để tăng tốc
+      # Step 3: Cache Composer dependencies for faster builds
       - name: Cache Composer Dependencies
         uses: actions/cache@v4
         with:
@@ -43,20 +43,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      # Bước 4: Install Laravel dependencies
+      # Step 4: Install Laravel dependencies
       - name: Install Composer Dependencies
         working-directory: ./WebApp
         run: |
           composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
-      # Bước 5: Copy .env và generate key
+      # Step 5: Copy .env and generate key
       - name: Setup Laravel Environment
         working-directory: ./WebApp
         run: |
           cp .env.example .env
           php artisan key:generate
           
-      # Bước 6: Tạo SQLite database cho testing
+      # Step 6: Create SQLite database for testing
       - name: Setup SQLite Database
         working-directory: ./WebApp
         run: |
@@ -70,19 +70,19 @@ jobs:
           sed -i 's/DB_USERNAME=.*/# DB_USERNAME=/' .env
           sed -i 's/DB_PASSWORD=.*/# DB_PASSWORD=/' .env
 
-      # Bước 7: Run database migrations
+      # Step 7: Run database migrations
       - name: Run Migrations
         working-directory: ./WebApp
         run: php artisan migrate --force
 
-      # Bước 8: Run PHPUnit tests
+      # Step 8: Run PHPUnit tests
       - name: Run PHPUnit Tests
         working-directory: ./WebApp
         run: |
           php artisan test || echo "Tests have failures - need to fix"
         continue-on-error: true
 
-      # Bước 9: Check code style với Laravel Pint
+      # Step 9: Check code style with Laravel Pint
       - name: Check Code Style (Laravel Pint)
         working-directory: ./WebApp
         run: ./vendor/bin/pint --test || echo "Code style issues found - need fixing"
@@ -105,11 +105,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # Bước 1: Checkout code
+      # Step 1: Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Bước 2: Free up disk space
+      # Step 2: Free up disk space
       - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -118,7 +118,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           df -h
 
-      # Bước 3: Setup Python 3.11
+      # Step 3: Setup Python 3.11
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -126,7 +126,7 @@ jobs:
           cache: 'pip'
           cache-dependency-path: predict-service/requirements.txt
 
-      # Bước 4: Install Python dependencies
+      # Step 4: Install Python dependencies
       - name: Install Python Dependencies
         working-directory: ./predict-service
         run: |
@@ -134,7 +134,7 @@ jobs:
           pip install -r requirements.txt --no-cache-dir
           pip install pytest pytest-cov flake8 black isort safety --no-cache-dir
 
-      # Bước 5: Lint với Flake8
+      # Step 5: Lint with Flake8
       - name: Lint with Flake8
         working-directory: ./predict-service
         run: |
@@ -143,21 +143,21 @@ jobs:
           # Exit-zero treats all errors as warnings
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,__pycache__,*.pyc
 
-      # Bước 6: Check code formatting với Black
+      # Step 6: Check code formatting with Black
       - name: Check Code Formatting (Black)
         working-directory: ./predict-service
         run: |
           black --check --diff . --exclude='/(venv|__pycache__|\.pyc)/'
         continue-on-error: true
 
-      # Bước 7: Check imports với isort
+      # Step 7: Check imports with isort
       - name: Check Import Ordering (isort)
         working-directory: ./predict-service
         run: |
           isort --check-only --diff . --skip venv --skip __pycache__
         continue-on-error: true
 
-      # Bước 8: Validate TensorFlow và dependencies (lightweight check)
+      # Step 8: Validate TensorFlow and dependencies (lightweight check)
       - name: Validate ML Dependencies
         working-directory: ./predict-service
         run: |
@@ -165,27 +165,27 @@ jobs:
           python -c "import flask; print('Flask:', flask.__version__)"
         continue-on-error: true
 
-      # Bước 8: Test database connection script
+      # Step 9: Test database connection script
       - name: Test Database Connection Script
         working-directory: ./predict-service
         run: |
           python -c "print('Database connection script validation passed')"
         continue-on-error: true
 
-      # Bước 9: Security check với Safety
+      # Step 10: Security check with Safety
       - name: Security Check (Safety)
         working-directory: ./predict-service
         run: |
           safety check --json || true
         continue-on-error: true
 
-      # Bước 10: Run pytest (nếu có test files)
+      # Step 11: Run pytest (if test files exist)
       - name: Run Python Tests
         working-directory: ./predict-service
         run: |
-          # Tạo thư mục tests nếu chưa có
+          # Create tests directory if it doesn't exist
           mkdir -p tests
-          # Run pytest nếu có test files
+          # Run pytest if test files exist
           if [ -d "tests" ] && [ "$(ls -A tests)" ]; then
             pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=html
           else
@@ -211,15 +211,15 @@ jobs:
     if: false  # Temporarily disabled for testing other jobs
     
     steps:
-      # Bước 1: Checkout code
+      # Step 1: Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Bước 2: Setup Docker Buildx
+      # Step 2: Setup Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Bước 3: Test Laravel Docker build
+      # Step 3: Test Laravel Docker build
       - name: Test Laravel Docker Build
         uses: docker/build-push-action@v5
         with:
@@ -230,7 +230,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Bước 4: Test Python Predict Service Docker build
+      # Step 4: Test Python Predict Service Docker build
       - name: Test Predict Service Docker Build
         uses: docker/build-push-action@v5
         with:
@@ -241,7 +241,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Bước 5: Test docker-compose configuration
+      # Step 5: Test docker-compose configuration
       - name: Validate Docker Compose
         run: |
           docker-compose config
@@ -255,36 +255,36 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # Bước 1: Checkout code
+      # Step 1: Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Bước 2: Setup PHP
+      # Step 2: Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           tools: composer:v2
 
-      # Bước 3: Install Composer dependencies
+      # Step 3: Install Composer dependencies
       - name: Install Composer Dependencies
         working-directory: ./WebApp
         run: composer install --prefer-dist --no-interaction
 
-      # Bước 4: Check PHP security vulnerabilities
+      # Step 4: Check PHP security vulnerabilities
       - name: PHP Security Audit
         working-directory: ./WebApp
         run: |
           composer audit --format=plain
         continue-on-error: true
 
-      # Bước 5: Setup Python
+      # Step 5: Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # Bước 6: Check Python security vulnerabilities
+      # Step 6: Check Python security vulnerabilities
       - name: Python Security Check
         working-directory: ./predict-service
         run: |

@@ -47,7 +47,7 @@ class PredictionService
             ];
 
             // Make API call to prediction service
-            $response = Http::timeout(30)->post(config('app.prediction_api_url', 'http://localhost:5000') . '/predict/model', $requestData);
+            $response = Http::timeout(30)->post(config('services.predict_service.url', 'http://predict-service:5000') . '/predict/model', $requestData);
 
             if (!$response->successful()) {
                 throw new \Exception('Prediction API returned error: ' . $response->body());

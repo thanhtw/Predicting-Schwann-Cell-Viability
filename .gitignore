@@ -6,6 +6,9 @@ secrets/
 *.key
 *.pem
 
+# But keep example files
+!.env.docker.example
+
 # Laravel specific
 /vendor/
 /node_modules/

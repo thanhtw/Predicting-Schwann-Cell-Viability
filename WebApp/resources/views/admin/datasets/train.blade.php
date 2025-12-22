@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function startProgressPolling(sid) {
         progressInterval = setInterval(async function() {
             try {
-                const response = await fetch(`${PREDICT_SERVICE_URL}/progress/${sid}`);
+                const response = await fetch(`/progress/${sid}`);
                 const data = await response.json();
                 
                 if (data.success && data.progress) {
@@ -390,10 +390,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             console.log('🚀 Starting training process...');
             console.log('Predict Service URL:', PREDICT_SERVICE_URL);
-            
+
             // Generate session ID
             console.log('📝 Generating session ID...');
-            const sessionResponse = await fetch(`${PREDICT_SERVICE_URL}/progress/generate-session`, {
+            const sessionResponse = await fetch('/progress/generate-session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

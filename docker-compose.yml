@@ -17,6 +17,7 @@ services:
       - DB_USERNAME=laravel_user
       - DB_PASSWORD=LaravelSecurePass2025!
       - PREDICT_SERVICE_URL=http://predict-service:5000
+      - PREDICTION_SERVICE_URL=http://predict-service:5000
     networks:
       - app-network
     expose:
@@ -25,9 +26,17 @@ services:
   predict-service:
     build: ./predict-service
     container_name: predict-service
+    environment:
+      - LARAVEL_API_URL=http://nginx/api
     volumes:
-        - ./predict-service:/app:ro
+        - ./predict-service:/app
         - ./WebApp:/var/www/html:ro
+        - laravel_storage:/var/www/html/storage
+        - mlflow_runs:/app/app/mlruns
+        - mlflow_models:/app/app/models
+        - training_progress:/app/training_progress
+    ports:
+      - "5000:5000"
     networks:
       - app-network
 
@@ -66,4 +75,7 @@ volumes:
   mysql_data:
   laravel_storage:
   laravel_cache:
+  mlflow_runs:
+  mlflow_models:
+  training_progress:
 
