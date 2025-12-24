@@ -193,7 +193,7 @@ jobs:
           fi
         continue-on-error: true
 
-      # Bước 11: Upload coverage report
+      # Step 12: Upload coverage report
       - name: Upload Python Coverage
         if: always()
         uses: actions/upload-artifact@v4

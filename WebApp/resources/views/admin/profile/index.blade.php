@@ -116,6 +116,22 @@
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
+
+                    <div class="form-group">
+                        <label for="email">{{ __('profile.email') }}</label>
+                        <input type="email" 
+                               class="form-control @error('email') is-invalid @enderror" 
+                               id="email" 
+                               name="email" 
+                               value="{{ old('email', $admin->email) }}" 
+                               placeholder="{{ __('profile.email_placeholder') }}">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> {{ __('profile.email_note') }}
+                        </small>
+                        @error('email')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="card-footer">

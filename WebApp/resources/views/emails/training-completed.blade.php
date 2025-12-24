@@ -155,10 +155,18 @@
                 <span class="info-label">Model Type:</span>
                 <span class="info-value"><strong>{{ strtoupper($trainingData['model_type']) }}</strong></span>
             </div>
+            @if(isset($trainingData['dataset_path']))
             <div class="info-row">
                 <span class="info-label">Dataset:</span>
                 <span class="info-value">{{ basename($trainingData['dataset_path']) }}</span>
             </div>
+            @endif
+            @if(isset($trainingData['dataset_name']))
+            <div class="info-row">
+                <span class="info-label">Dataset:</span>
+                <span class="info-value">{{ $trainingData['dataset_name'] }}</span>
+            </div>
+            @endif
             <div class="info-row">
                 <span class="info-label">Model Name:</span>
                 <span class="info-value">{{ $trainingData['model_name'] }}</span>

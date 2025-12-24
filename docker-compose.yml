@@ -9,8 +9,6 @@ services:
     depends_on:
       - mysql
       - predict-service
-    env_file:
-      - .env.docker
     environment:
       - DB_HOST=mysql
       - DB_DATABASE=laravel_db

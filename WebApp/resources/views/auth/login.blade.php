@@ -105,6 +105,12 @@
                                                 {{ $message }}
                                             </div>
                                         @enderror
+                                        <div class="text-end mt-2">
+                                            <a href="{{ route('password.request') }}" class="text-muted small">
+                                                <i class="fas fa-key me-1"></i>
+                                                Forgot Password?
+                                            </a>
+                                        </div>
                                     </div>
 
                                     <div class="d-grid mb-3">
@@ -113,6 +119,13 @@
                                             Sign In
                                         </button>
                                     </div>
+
+                                    @if (session('success'))
+                                        <div class="alert alert-success d-flex align-items-center">
+                                            <i class="fas fa-check-circle flex-shrink-0 me-2"></i>
+                                            <div>{{ session('success') }}</div>
+                                        </div>
+                                    @endif
 
                                     @if ($errors->any())
                                         <div class="alert alert-danger d-flex align-items-center">

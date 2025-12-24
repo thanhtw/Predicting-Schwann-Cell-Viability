@@ -934,6 +934,7 @@ class AdminController extends Controller
             'BirthDate' => 'required|date',
             'Address' => 'required|string|max:255',
             'Username' => 'required|string|max:255|unique:users,Username,' . $admin->id,
+            'email' => 'nullable|email|max:255|unique:users,email,' . $admin->id,
         ]);
 
         try {
@@ -943,6 +944,7 @@ class AdminController extends Controller
                 'BirthDate' => $request->BirthDate,
                 'Address' => $request->Address,
                 'Username' => $request->Username,
+                'email' => $request->email,
             ]);
 
             return redirect()->route('admin.profile')->with('success', __('profile.update_success'));

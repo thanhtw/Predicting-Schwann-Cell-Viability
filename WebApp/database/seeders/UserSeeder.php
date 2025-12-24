@@ -24,6 +24,7 @@ class UserSeeder extends Seeder
             'BirthDate' => '1985-01-01',
             'Address' => '123 Admin Street, System City',
             'Username' => 'admin',
+            'email' => 'admin@psc-mlops.local',
             'Password' => bcrypt('Admin@123'),
             'role_id' => 1,
         ]);
