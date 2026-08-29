@@ -120,7 +120,9 @@ echo -e "${YELLOW}Waiting for MySQL to be ready...${NC}"
 max_retries=30
 retries=0
 while [ $retries -lt $max_retries ]; do
-    if docker-compose exec -T mysql mysqladmin ping -h localhost -u root -pMySecureRootPass2025! 2>&1 | grep -q "mysqld is alive"; then
+    # Use the password configured in the container and avoid exposing it in
+    # the process arguments or printing mysqladmin's password warning.
+    if docker-compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqladmin ping --host=localhost --user=root --silent' > /dev/null 2>&1; then
         break
     fi
     retries=$((retries + 1))
