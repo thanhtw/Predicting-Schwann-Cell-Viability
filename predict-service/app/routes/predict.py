@@ -41,26 +41,18 @@ except ImportError:
                 'properties': {
                     'pc_mxene_loading': {
                         'type': 'number',
-                        'minimum': 0,
-                        'maximum': 0.3,
                         'description': 'PC MXene loading value'
                     },
                     'laminin_peptide_loading': {
                         'type': 'number', 
-                        'minimum': 0,
-                        'maximum': 150,
                         'description': 'Laminin peptide loading value'
                     },
                     'stimulation_frequency': {
                         'type': 'number',
-                        'minimum': 0,
-                        'maximum': 3,
                         'description': 'Stimulation frequency value'
                     },
                     'applied_voltage': {
                         'type': 'number',
-                        'minimum': 0,
-                        'maximum': 3,
                         'description': 'Applied voltage value'
                     },
                     'model_path': {
@@ -135,16 +127,6 @@ def predict_with_dynamic_model():
         applied_voltage = float(data['applied_voltage'])
         model_path = data['model_path']
         model_type = data['model_type'].lower()
-        
-        # Validate parameter ranges
-        if not (0 <= pc_mxene_loading <= 0.3):
-            return jsonify({'error': 'pc_mxene_loading must be between 0 and 0.3'}), 400
-        if not (0 <= laminin_peptide_loading <= 150):
-            return jsonify({'error': 'laminin_peptide_loading must be between 0 and 150'}), 400
-        if not (0 <= stimulation_frequency <= 3):
-            return jsonify({'error': 'stimulation_frequency must be between 0 and 3'}), 400
-        if not (0 <= applied_voltage <= 3):
-            return jsonify({'error': 'applied_voltage must be between 0 and 3'}), 400
         
         # Validate model type
         supported_types = ['keras', 'pytorch', 'sklearn', 'xgboost', 'pickle', 'joblib']
@@ -248,26 +230,18 @@ def health_check():
                 'properties': {
                     'pc_mxene_loading': {
                         'type': 'number',
-                        'minimum': 0,
-                        'maximum': 0.3,
                         'description': 'PC MXene loading value'
                     },
                     'laminin_peptide_loading': {
                         'type': 'number', 
-                        'minimum': 0,
-                        'maximum': 150,
                         'description': 'Laminin peptide loading value'
                     },
                     'stimulation_frequency': {
                         'type': 'number',
-                        'minimum': 0,
-                        'maximum': 3,
                         'description': 'Stimulation frequency value'
                     },
                     'applied_voltage': {
                         'type': 'number',
-                        'minimum': 0,
-                        'maximum': 3,
                         'description': 'Applied voltage value'
                     }
                 }
@@ -312,16 +286,6 @@ def predict_with_active_model():
         laminin_peptide_loading = float(data['laminin_peptide_loading'])
         stimulation_frequency = float(data['stimulation_frequency'])
         applied_voltage = float(data['applied_voltage'])
-        
-        # Validate parameter ranges
-        if not (0 <= pc_mxene_loading <= 0.3):
-            return jsonify({'error': 'pc_mxene_loading must be between 0 and 0.3'}), 400
-        if not (0 <= laminin_peptide_loading <= 150):
-            return jsonify({'error': 'laminin_peptide_loading must be between 0 and 150'}), 400
-        if not (0 <= stimulation_frequency <= 3):
-            return jsonify({'error': 'stimulation_frequency must be between 0 and 3'}), 400
-        if not (0 <= applied_voltage <= 3):
-            return jsonify({'error': 'applied_voltage must be between 0 and 3'}), 400
         
         # Get active model from database
         db_utils = DatabaseUtils()
@@ -430,10 +394,10 @@ def predict_with_active_model():
                         'type': 'object',
                         'required': ['pc_mxene_loading', 'laminin_peptide_loading', 'stimulation_frequency', 'applied_voltage'],
                         'properties': {
-                            'pc_mxene_loading': {'type': 'number', 'minimum': 0, 'maximum': 0.3},
-                            'laminin_peptide_loading': {'type': 'number', 'minimum': 0, 'maximum': 150},
-                            'stimulation_frequency': {'type': 'number', 'minimum': 0, 'maximum': 3},
-                            'applied_voltage': {'type': 'number', 'minimum': 0, 'maximum': 3}
+                            'pc_mxene_loading': {'type': 'number'},
+                            'laminin_peptide_loading': {'type': 'number'},
+                            'stimulation_frequency': {'type': 'number'},
+                            'applied_voltage': {'type': 'number'}
                         }
                     },
                     'force_reload': {
@@ -589,16 +553,6 @@ def predict_with_mlflow():
             'Electric stimulation (Hz)': [features['stimulation_frequency']],
             'Voltage (V)': [features['applied_voltage']]
         })
-        
-        # Validate ranges
-        if not (0 <= features['pc_mxene_loading'] <= 0.3):
-            return jsonify({'error': 'pc_mxene_loading must be between 0 and 0.3'}), 400
-        if not (0 <= features['laminin_peptide_loading'] <= 150):
-            return jsonify({'error': 'laminin_peptide_loading must be between 0 and 150'}), 400
-        if not (0 <= features['stimulation_frequency'] <= 3):
-            return jsonify({'error': 'stimulation_frequency must be between 0 and 3'}), 400
-        if not (0 <= features['applied_voltage'] <= 3):
-            return jsonify({'error': 'applied_voltage must be between 0 and 3'}), 400
         
         # Scale features
         scaled_data = scaler.transform(input_data)

@@ -101,7 +101,7 @@
                             {{ __('predict.pc_mxene_loading') }}
                         </label>
                         <input type="number" step="0.001" class="form-control" id="pc_mxene_loading" 
-                               name="pc_mxene_loading" min="0" max="0.3" placeholder="{{ __('predict.pc_mxene_placeholder') }}" required>
+                               name="pc_mxene_loading" placeholder="{{ __('predict.pc_mxene_placeholder') }}" required>
                         <small class="form-text text-muted">{{ __('predict.pc_mxene_unit') }}</small>
                     </div>
 
@@ -112,7 +112,7 @@
                             {{ __('predict.laminin_peptide_loading') }}
                         </label>
                         <input type="number" step="0.1" class="form-control" id="laminin_peptide_loading" 
-                               name="laminin_peptide_loading" min="0" max="150" placeholder="{{ __('predict.laminin_placeholder') }}" required>
+                               name="laminin_peptide_loading" placeholder="{{ __('predict.laminin_placeholder') }}" required>
                         <small class="form-text text-muted">{{ __('predict.laminin_unit') }}</small>
                     </div>
 
@@ -123,7 +123,7 @@
                             {{ __('predict.stimulation_frequency') }}
                         </label>
                         <input type="number" step="0.1" class="form-control" id="stimulation_frequency" 
-                               name="stimulation_frequency" min="0" max="3" placeholder="{{ __('predict.stimulation_placeholder') }}" required>
+                               name="stimulation_frequency" placeholder="{{ __('predict.stimulation_placeholder') }}" required>
                         <small class="form-text text-muted">{{ __('predict.stimulation_unit') }}</small>
                     </div>
 
@@ -134,7 +134,7 @@
                             {{ __('predict.applied_voltage') }}
                         </label>
                         <input type="number" step="0.1" class="form-control" id="applied_voltage" 
-                               name="applied_voltage" min="0" max="3" placeholder="{{ __('predict.voltage_placeholder') }}" required>
+                               name="applied_voltage" placeholder="{{ __('predict.voltage_placeholder') }}" required>
                         <small class="form-text text-muted">{{ __('predict.voltage_unit') }}</small>
                     </div>
 
@@ -202,7 +202,6 @@
                         {{ __('predict.pc_mxene_loading') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>{{ __('predict.range') }}</strong> 0 to 0.3 mg/mL<br>
                         <strong>{{ __('predict.description') }}</strong> {{ __('predict.pc_mxene_desc') }}
                     </p>
                 </div>
@@ -213,7 +212,6 @@
                         {{ __('predict.laminin_peptide_loading') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>{{ __('predict.range') }}</strong> 0 to 150 μg/mL<br>
                         <strong>{{ __('predict.description') }}</strong> {{ __('predict.laminin_desc') }}
                     </p>
                 </div>
@@ -224,7 +222,6 @@
                         {{ __('predict.stimulation_frequency') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>{{ __('predict.range') }}</strong> 0 to 3 Hz<br>
                         <strong>{{ __('predict.description') }}</strong> {{ __('predict.stimulation_desc') }}
                     </p>
                 </div>
@@ -235,7 +232,6 @@
                         {{ __('predict.applied_voltage') }}
                     </h6>
                     <p class="mb-0 small">
-                        <strong>{{ __('predict.range') }}</strong> 0 to 3 V<br>
                         <strong>{{ __('predict.description') }}</strong> {{ __('predict.voltage_desc') }}
                     </p>
                 </div>
@@ -264,7 +260,7 @@
 
 @section('scripts')
 <script src="{{ asset('js/prediction-form-config.js') }}"></script>
-<script src="{{ asset('js/prediction-form.js') }}"></script>
+<script src="{{ asset('js/prediction-form.js') }}?v={{ filemtime(public_path('js/prediction-form.js')) }}"></script>
 <script src="{{ asset('js/user-prediction.js') }}"></script>
 <script>
 // Register user prediction form configuration

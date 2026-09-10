@@ -376,10 +376,10 @@ class AdminControllerTest extends TestCase
         $model = MLModel::factory()->create(['IsActive' => true]);
         
         $predictionData = [
-            'pc_mxene_loading' => 0.1,
-            'laminin_peptide_loading' => 50,
-            'stimulation_frequency' => 1.5,
-            'applied_voltage' => 2.0,
+            'pc_mxene_loading' => 1.1,
+            'laminin_peptide_loading' => 200,
+            'stimulation_frequency' => 5.0,
+            'applied_voltage' => 4.0,
             'ml_model_id' => $model->id
         ];
 
@@ -413,10 +413,10 @@ class AdminControllerTest extends TestCase
     public function admin_prediction_validation_fails_with_invalid_data()
     {
         $invalidData = [
-            'pc_mxene_loading' => -0.1, // negative value
-            'laminin_peptide_loading' => 200, // over max
-            'stimulation_frequency' => 5, // over max
-            'applied_voltage' => -1, // negative value
+            'pc_mxene_loading' => 'invalid', // not numeric
+            'laminin_peptide_loading' => 'invalid', // not numeric
+            'stimulation_frequency' => 'invalid', // not numeric
+            'applied_voltage' => '', // required
             'ml_model_id' => 999 // non-existent model
         ];
 

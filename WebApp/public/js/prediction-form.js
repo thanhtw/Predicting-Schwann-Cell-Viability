@@ -72,10 +72,10 @@ class PredictionForm {
     validateData(data) {
         const validations = [
             { field: 'ml_model_id', condition: !data.ml_model_id || isNaN(data.ml_model_id), message: 'Please select an AI model' },
-            { field: 'pc_mxene_loading', condition: data.pc_mxene_loading < 0 || data.pc_mxene_loading > 0.3, message: 'pc-MXene loading must be between 0 and 0.3' },
-            { field: 'laminin_peptide_loading', condition: data.laminin_peptide_loading < 0 || data.laminin_peptide_loading > 150, message: 'Laminin peptide must be between 0 and 150' },
-            { field: 'stimulation_frequency', condition: data.stimulation_frequency < 0 || data.stimulation_frequency > 3, message: 'Stimulation frequency must be between 0 and 3' },
-            { field: 'applied_voltage', condition: data.applied_voltage < 0 || data.applied_voltage > 3, message: 'Applied voltage must be between 0 and 3' }
+            { field: 'pc_mxene_loading', condition: !Number.isFinite(data.pc_mxene_loading), message: 'pc-MXene loading must be a number' },
+            { field: 'laminin_peptide_loading', condition: !Number.isFinite(data.laminin_peptide_loading), message: 'Laminin peptide loading must be a number' },
+            { field: 'stimulation_frequency', condition: !Number.isFinite(data.stimulation_frequency), message: 'Stimulation frequency must be a number' },
+            { field: 'applied_voltage', condition: !Number.isFinite(data.applied_voltage), message: 'Applied voltage must be a number' }
         ];
         
         for (const validation of validations) {

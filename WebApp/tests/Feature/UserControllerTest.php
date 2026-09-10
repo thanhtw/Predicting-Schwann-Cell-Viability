@@ -82,10 +82,10 @@ class UserControllerTest extends TestCase
         $model = MLModel::factory()->create(['IsActive' => true]);
         
         $predictionData = [
-            'pc_mxene_loading' => 0.2,
-            'laminin_peptide_loading' => 75,
-            'stimulation_frequency' => 2.0,
-            'applied_voltage' => 1.5,
+            'pc_mxene_loading' => 1.2,
+            'laminin_peptide_loading' => 200,
+            'stimulation_frequency' => 5.0,
+            'applied_voltage' => 4.5,
             'ml_model_id' => $model->id
         ];
 
@@ -96,10 +96,10 @@ class UserControllerTest extends TestCase
         $this->assertDatabaseHas('predictions', [
             'user_id' => $this->user->id,
             'ml_model_id' => $model->id,
-            'MXene' => 0.2,
-            'Peptide' => 75,
-            'Stimulation' => 2.0,
-            'Voltage' => 1.5
+            'MXene' => 1.2,
+            'Peptide' => 200,
+            'Stimulation' => 5.0,
+            'Voltage' => 4.5
         ]);
     }
 
@@ -108,8 +108,8 @@ class UserControllerTest extends TestCase
     {
         $invalidData = [
             'pc_mxene_loading' => 'invalid', // not numeric
-            'laminin_peptide_loading' => -10, // negative
-            'stimulation_frequency' => 10, // over max
+            'laminin_peptide_loading' => 'invalid', // not numeric
+            'stimulation_frequency' => 'invalid', // not numeric
             'applied_voltage' => '', // empty
             'ml_model_id' => 'invalid' // not numeric
         ];
