@@ -10,7 +10,9 @@ WORKDIR /app
 # Copy requirements and install dependencies as root
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && grep -Ev '^torch([<=>].*)?$' requirements.txt > /tmp/requirements-no-torch.txt \
+    && pip install --no-cache-dir --retries 5 --timeout 60 -r /tmp/requirements-no-torch.txt \
+    && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
 # Copy application files and set ownership
 COPY --chown=apiuser:apigroup . .
