@@ -1,4 +1,4 @@
-# Predicting Schwann Cell Viability - Laravel MVC System
+# Predicting Schwann Cell Viability - Laravel MVC System (Deploy Revise For Ubuntu)
 
 [![CI - Testing & Quality Checks](https://github.com/nguyenhuuluan1702/PCS_MLops/actions/workflows/ci.yml/badge.svg)](https://github.com/nguyenhuuluan1702/PCS_MLops/actions/workflows/ci.yml)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://www.php.net/)
