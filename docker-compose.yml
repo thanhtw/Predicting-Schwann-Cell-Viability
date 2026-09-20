@@ -2,6 +2,7 @@ services:
   laravel-webapp:
     build: ./WebApp
     container_name: laravel-webapp
+    restart: unless-stopped
     volumes:
       - ./WebApp:/var/www/html
       # Keep dependencies installed in the image from being hidden by the
@@ -33,6 +34,7 @@ services:
   predict-service:
     build: ./predict-service
     container_name: predict-service
+    restart: unless-stopped
     environment:
       - LARAVEL_API_URL=http://nginx/api
       - JWT_SECRET=${JWT_SECRET:-psc-local-jwt-secret-change-in-production}
@@ -51,7 +53,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: WebApp-db
-    restart: always 
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: MySecureRootPass2025!
       MYSQL_DATABASE: laravel_db
@@ -64,6 +66,7 @@ services:
 
   nginx:
     image: nginx:alpine
+    restart: unless-stopped
     volumes:
       - ./WebApp:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
