@@ -12,10 +12,10 @@ return [
     // Fields
     'name' => 'Model Name',
     'library_type' => 'Library Type',
-    'mse' => 'MSE',
-    'mae' => 'MAE',
+    'mse' => 'MSE (0–1)',
+    'mae' => 'MAE (0–1)',
     'r2' => 'R² Score',
-    'rmse' => 'RMSE',
+    'rmse' => 'RMSE (0–1)',
     'created_date' => 'Created Date',
     'algorithm' => 'Algorithm',
     'parameters' => 'Parameters',

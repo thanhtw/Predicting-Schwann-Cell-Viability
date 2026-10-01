@@ -77,14 +77,18 @@
                                 <label for="role_id">{{ __('users.role_required') }}</label>
                                 <select class="form-control @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
                                     <option value="">{{ __('users.select_role') }}</option>
-                                    <option value="1" {{ old('role_id', $user->role_id) == 1 ? 'selected' : '' }}>{{ __('users.role_admin') }}</option>
-                                    <option value="2" {{ old('role_id', $user->role_id) == 2 ? 'selected' : '' }}>{{ __('users.role_user') }}</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}"
+                                            {{ (string) old('role_id', $user->role_id) === (string) $role->id ? 'selected' : '' }}>
+                                            {{ $role->RoleName }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 @error('role_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <small class="form-text text-muted">
-                                    <i class="fas fa-info-circle"></i> {{ __('users.role_admin') }}: Full system access | {{ __('users.role_user') }}: Limited access
+                                    <i class="fas fa-info-circle"></i> Select the role that determines this user's default permissions.
                                 </small>
                             </div>
                         </div>

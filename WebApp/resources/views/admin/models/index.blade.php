@@ -47,8 +47,8 @@
                                 <th>{{ __('models.name') }}</th>                            
                                 <th>{{ __('models.library_type') }}</th>
                                 <th>{{ __('models.dataset') }}</th>
-                                <th>MSE</th>
-                                <th>MAE</th>
+                                <th>{{ __('models.mse') }}</th>
+                                <th>{{ __('models.mae') }}</th>
                                 <th>{{ __('models.status') }}</th>
                                 <th>{{ __('models.predictions') }}</th>
                                 <th>{{ __('models.actions') }}</th>
@@ -84,14 +84,14 @@
                                 </td>
                                 <td>
                                     @if($model->MSEValue !== null)
-                                        {{ number_format($model->MSEValue, 4) }}
+                                        {{ number_format($model->MSE, 4) }}
                                     @else
                                         <span class="text-muted">{{ __('models.na') }}</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($model->MAEValue !== null)
-                                        {{ number_format($model->MAEValue, 4) }}
+                                        {{ number_format($model->MAE, 4) }}
                                     @else
                                         <span class="text-muted">{{ __('models.na') }}</span>
                                     @endif
@@ -143,10 +143,6 @@
                     </table>
                 </div>
                 
-                <!-- Pagination -->
-                <div class="d-flex justify-content-center">
-                    {{ $models->links() }}
-                </div>
             </div>
         </div>
     </div>

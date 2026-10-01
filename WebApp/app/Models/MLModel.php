@@ -75,18 +75,24 @@ class MLModel extends Model
 
     public function getMSEAttribute()
     {
-        return $this->MSEValue;
+        // Stored metrics use Cell viability (%) units. Present error metrics
+        // on the normalized 0-1 viability scale for consistent UI reporting.
+        return $this->MSEValue === null ? null : $this->MSEValue / 10000;
     }
 
     public function getMAEAttribute()
     {
-        return $this->MAEValue;
+        return $this->MAEValue === null ? null : $this->MAEValue / 100;
     }
 
     public function getRMSEAttribute()
     {
-        // Return stored RMSE value, or calculate from MSE if not stored
-        return $this->RMSEValue ?? sqrt($this->MSEValue ?? 0);
+        $rmse = $this->RMSEValue;
+        if ($rmse === null && $this->MSEValue !== null) {
+            $rmse = sqrt($this->MSEValue);
+        }
+
+        return $rmse === null ? null : $rmse / 100;
     }
 
     public function getR2Attribute()

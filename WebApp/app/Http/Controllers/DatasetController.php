@@ -13,9 +13,37 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 
 class DatasetController extends Controller
 {
+    /**
+     * Proxy progress requests through Laravel. The predict-service hostname is
+     * reachable from PHP in Docker, but is not necessarily reachable from the
+     * user's browser (or when the app is served directly with Artisan).
+     */
+    public function trainingProgress(string $sessionId)
+    {
+        try {
+            $apiUrl = rtrim(config('services.predict_service.url', 'http://localhost:5000'), '/')
+                . '/progress/' . rawurlencode($sessionId);
+            $response = Http::timeout(10)->get($apiUrl);
+
+            return response($response->body(), $response->status())
+                ->header('Content-Type', 'application/json');
+        } catch (\Throwable $e) {
+            Log::warning('Unable to fetch training progress', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Training progress service is unavailable',
+            ], 502);
+        }
+    }
+
     /**
      * Apply email settings from database to config
      */
@@ -133,7 +161,7 @@ class DatasetController extends Controller
 
         // Validate training parameters
         $request->validate([
-            'model_type' => 'required|in:random_forest,xgboost,ann',
+            'model_type' => 'required|in:random_forest,xgboost,ann,linear_regression,svr,gradient_boosting',
             'training_method' => 'nullable|in:process,api',
             'model_name' => 'nullable|string|max:255',
             'session_id' => 'nullable|string', // Session ID for progress tracking
@@ -141,6 +169,10 @@ class DatasetController extends Controller
             'n_estimators' => 'nullable|integer|min:10|max:1000',
             'max_depth' => 'nullable|integer|min:1|max:50',
             'learning_rate' => 'nullable|numeric|min:0.001|max:1',
+            // Support Vector Regression parameters
+            'svr_c' => 'nullable|numeric|min:0.001|max:10000',
+            'svr_epsilon' => 'nullable|numeric|min:0|max:100',
+            'svr_kernel' => 'nullable|in:linear,poly,rbf,sigmoid',
             // ANN parameters
             'hidden_layers' => 'nullable|string',
             'epochs' => 'nullable|integer|min:10|max:1000',
@@ -165,13 +197,17 @@ class DatasetController extends Controller
         ];
 
         // Add model-specific parameters
-        if ($modelType === 'random_forest' || $modelType === 'xgboost') {
+        if (in_array($modelType, ['random_forest', 'xgboost', 'gradient_boosting'], true)) {
             $options['n_estimators'] = $request->input('n_estimators', 100);
             $options['max_depth'] = $request->input('max_depth');
             
-            if ($modelType === 'xgboost') {
+            if ($modelType === 'xgboost' || $modelType === 'gradient_boosting') {
                 $options['learning_rate'] = $request->input('learning_rate', 0.1);
             }
+        } elseif ($modelType === 'svr') {
+            $options['svr_c'] = $request->input('svr_c', 1.0);
+            $options['svr_epsilon'] = $request->input('svr_epsilon', 0.1);
+            $options['svr_kernel'] = $request->input('svr_kernel', 'rbf');
         } elseif ($modelType === 'ann') {
             $options['hidden_layers'] = $request->input('hidden_layers', '64,32,16');
             $options['epochs'] = $request->input('epochs', 100);
@@ -184,14 +220,10 @@ class DatasetController extends Controller
         // Sử dụng TrainingService để xử lý training
         $trainingService = app(TrainingService::class);
         
-        // Choose training method
-        $trainingMethod = $request->input('training_method', 'api');
-        
-        if ($trainingMethod === 'api') {
-            $result = $trainingService->trainModelViaAPI($dataset, $user, $options);
-        } else {
-            $result = $trainingService->trainModel($dataset, $user, $options);
-        }
+        // All model types are implemented by the Flask multi-model API. The
+        // legacy local process runner only supports the original pipeline and
+        // silently ignores most of the model-specific configuration.
+        $result = $trainingService->trainModelViaAPI($dataset, $user, $options);
 
         // Prepare training data for email
         $trainingData = [

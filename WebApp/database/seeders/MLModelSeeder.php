@@ -20,8 +20,10 @@ class MLModelSeeder extends Seeder
                 'FilePath' => 'models/default_ann_model.keras',
                 'LibType' => 'keras',
                 'IsActive' => true,
-                'MSEValue' => 0.0281,
-                'MAEValue' => 0.1144,
+                // Metrics use the same percentage scale as Cell viability (%).
+                'MSEValue' => 281.0,
+                'MAEValue' => 11.44,
+                'RMSEValue' => sqrt(281.0),
             ]);
 
             MLModel::create([
@@ -29,8 +31,9 @@ class MLModelSeeder extends Seeder
                 'FilePath' => 'models/custom_ann_model.keras',
                 'LibType' => 'keras',
                 'IsActive' => true,
-                'MSEValue' => 0.02,
-                'MAEValue' => 0.0896,
+                'MSEValue' => 200.0,
+                'MAEValue' => 8.96,
+                'RMSEValue' => sqrt(200.0),
             ]);
 
             MLModel::create([
@@ -38,8 +41,9 @@ class MLModelSeeder extends Seeder
                 'FilePath' => 'models/lr_augmented_model.pkl',
                 'LibType' => 'sklearn',
                 'IsActive' => true,
-                'MSEValue' => 0.0265,
-                'MAEValue' => 0.131,
+                'MSEValue' => 265.0,
+                'MAEValue' => 13.10,
+                'RMSEValue' => sqrt(265.0),
             ]);
             
             MLModel::create([
@@ -47,8 +51,9 @@ class MLModelSeeder extends Seeder
                 'FilePath' => 'models/rf_augmented_model.pkl',
                 'LibType' => 'sklearn',
                 'IsActive' => true,
-                'MSEValue' => 0.0093,
-                'MAEValue' => 0.0709,
+                'MSEValue' => 93.0,
+                'MAEValue' => 7.09,
+                'RMSEValue' => sqrt(93.0),
             ]);
 
             MLModel::create([
@@ -56,8 +61,9 @@ class MLModelSeeder extends Seeder
                 'FilePath' => 'models/xgb_augmented_model.json',
                 'LibType' => 'xgboost',
                 'IsActive' => true,
-                'MSEValue' => 0.0095,
-                'MAEValue' => 0.0725,
+                'MSEValue' => 95.0,
+                'MAEValue' => 7.25,
+                'RMSEValue' => sqrt(95.0),
             ]);
         }
 

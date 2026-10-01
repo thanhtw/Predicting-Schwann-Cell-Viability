@@ -51,7 +51,8 @@ class AdminController extends Controller
 
     public function createUser()
     {
-        return view('admin.users.create');
+        $roles = Role::orderBy('id')->get();
+        return view('admin.users.create', compact('roles'));
     }
 
     public function storeUser(Request $request)
@@ -63,6 +64,7 @@ class AdminController extends Controller
             'Address' => 'required|string|max:255',
             'Username' => 'required|string|max:255|unique:users',
             'Password' => 'required|string|min:6',
+            'role_id' => 'nullable|integer|exists:roles,id',
         ]);
 
         try {
@@ -73,6 +75,7 @@ class AdminController extends Controller
                 'Address' => $request->Address,
                 'Username' => $request->Username,
                 'Password' => $request->Password,
+                'role_id' => $request->input('role_id', 2),
             ]);
 
             return redirect()->route('admin.users')->with('success', 'User created successfully with auto-generated UserCode.');
@@ -86,7 +89,8 @@ class AdminController extends Controller
     public function editUser(User $user)
     {
         // Allow editing all users including admins to manage roles
-        return view('admin.users.edit', compact('user'));
+        $roles = Role::orderBy('id')->get();
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     public function updateUser(Request $request, User $user)
@@ -97,7 +101,7 @@ class AdminController extends Controller
             'BirthDate' => 'required|date',
             'Address' => 'required|string|max:255',
             'Username' => 'required|string|max:255|unique:users,Username,' . $user->id,
-            'role_id' => 'required|integer|in:1,2',
+            'role_id' => 'required|integer|exists:roles,id',
         ]);
 
         try {
@@ -199,7 +203,10 @@ class AdminController extends Controller
     // ML Model Management
     public function models()
     {
-        $models = MLModel::with('dataset')->paginate(10);
+        // DataTables provides searching, sorting, and pagination on this page.
+        // Returning a Laravel paginator as well creates a second, conflicting
+        // pagination control and limits DataTables to only the current 10 rows.
+        $models = MLModel::with('dataset')->get();
         return view('admin.models.index', compact('models'));
     }
 

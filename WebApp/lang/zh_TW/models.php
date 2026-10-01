@@ -12,10 +12,10 @@ return [
     // Fields
     'name' => '模型名稱',
     'library_type' => '函式庫類型',
-    'mse' => 'MSE',
-    'mae' => 'MAE',
+    'mse' => 'MSE（0–1）',
+    'mae' => 'MAE（0–1）',
     'r2' => 'R² 分數',
-    'rmse' => 'RMSE',
+    'rmse' => 'RMSE（0–1）',
     'created_date' => '建立日期',
     'algorithm' => '演算法',
     'parameters' => '參數',

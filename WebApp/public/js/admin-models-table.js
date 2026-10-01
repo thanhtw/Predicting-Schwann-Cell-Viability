@@ -70,7 +70,7 @@ $(document).ready(function() {
             { responsivePriority: 3, targets: 2 }, // MSE
             { responsivePriority: 3, targets: 3 }, // MAE
             { responsivePriority: 4, targets: 4 }, // Status
-            { responsivePriority: 4, targets: 6 }, // Actions
+            { responsivePriority: 4, targets: 7 }, // Actions
             { className: "text-center", targets: [1, 2, 3, 4, 5] }, // Center align for badges/status columns
             // { width: "30%", targets: 0 }, // Model Name width
             // { width: "15%", targets: 1 }, // Library Type width

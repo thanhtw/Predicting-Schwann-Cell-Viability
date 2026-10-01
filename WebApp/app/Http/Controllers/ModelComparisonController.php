@@ -109,26 +109,19 @@ class ModelComparisonController extends Controller
      */
     private function getMetricValue($model, $metric)
     {
-        $columnMap = [
-            'MSE' => 'MSEValue',
-            'MAE' => 'MAEValue',
-            'RMSE' => 'RMSEValue',
-            'R2' => 'R2Value',
+        $attributeMap = [
+            'MSE' => 'MSE',
+            'MAE' => 'MAE',
+            'RMSE' => 'RMSE',
+            'R2' => 'R2',
         ];
 
-        $column = $columnMap[$metric] ?? null;
-        if (!$column) {
+        $attribute = $attributeMap[$metric] ?? null;
+        if (!$attribute) {
             return 0;
         }
 
-        $value = $model->$column;
-        
-        // If value is null, try to calculate RMSE from MSE
-        if ($value === null && $metric === 'RMSE' && $model->MSEValue !== null) {
-            return sqrt($model->MSEValue);
-        }
-
-        return $value ?? 0;
+        return $model->$attribute ?? 0;
     }
 
     /**

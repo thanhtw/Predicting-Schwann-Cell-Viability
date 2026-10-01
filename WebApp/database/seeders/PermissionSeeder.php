@@ -61,9 +61,8 @@ class PermissionSeeder extends Seeder
         // Get roles
         $adminRole = Role::where('id', 1)->first(); // Admin
         $userRole = Role::where('id', 2)->first();  // Default User
-        $predictionUserRole = Role::where('RoleCode', 'prediction_user')->first(); // Group 1
-        $datasetManagerRole = Role::where('RoleCode', 'dataset_manager')->first(); // Group 2
-        $modelTrainerRole = Role::where('RoleCode', 'model_trainer')->first(); // Group 3
+        $datasetManagerRole = Role::where('RoleCode', 'dataset_manager')->first();
+        $modelTrainerRole = Role::where('RoleCode', 'model_trainer')->first();
 
         // Get all permissions
         $allPermissions = Permission::all();
@@ -84,19 +83,7 @@ class PermissionSeeder extends Seeder
             $userRole->permissions()->sync($userPermissions);
         }
 
-        // Group 1: Prediction User
-        // Permissions: Make Predictions, View Predictions, View History
-        if ($predictionUserRole) {
-            $group1Permissions = Permission::whereIn('name', [
-                'make_predictions',
-                'view_predictions',
-                'view_history'
-            ])->pluck('id');
-            
-            $predictionUserRole->permissions()->sync($group1Permissions);
-        }
-
-        // Group 2: Dataset Manager
+        // Dataset Manager
         // Permissions: Manage Datasets
         if ($datasetManagerRole) {
             $group2Permissions = Permission::whereIn('name', [
@@ -106,7 +93,7 @@ class PermissionSeeder extends Seeder
             $datasetManagerRole->permissions()->sync($group2Permissions);
         }
 
-        // Group 3: Model Trainer
+        // Model Trainer
         // Permissions: Manage Datasets, Train Models, Manage Models
         if ($modelTrainerRole) {
             $group3Permissions = Permission::whereIn('name', [

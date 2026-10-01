@@ -45,6 +45,15 @@
                             $predictionCount = $user->predictions_count ?? 0;
                             $isCurrentUser = $user->id === Auth::id();
                             $isAdmin = $user->role_id == 1;
+                            $roleCode = $user->role?->RoleCode;
+                            $roleName = $user->role?->RoleName ?? __('users.role_user');
+                            [$roleBadge, $roleIcon] = match ($roleCode) {
+                                'admin' => ['bg-danger', 'fas fa-crown'],
+                                'model_trainer' => ['bg-success', 'fas fa-brain'],
+                                'dataset_manager' => ['bg-warning text-dark', 'fas fa-database'],
+                                'user' => ['bg-info text-dark', 'fas fa-chart-line'],
+                                default => ['bg-primary', 'fas fa-user'],
+                            };
                         @endphp
                         <tr class="{{ $isAdmin ? 'table-warning' : '' }} {{ $isCurrentUser ? 'table-info' : '' }}">
                             <td>
@@ -58,12 +67,8 @@
                             <td>{{ $user->FullName }}</td>
                             <td>{{ $user->Username }}</td>
                             <td>
-                                <span class="badge {{ $isAdmin ? 'bg-danger' : 'bg-primary' }}">
-                                    @if($isAdmin)
-                                        <i class="fas fa-crown"></i> {{ __('users.role_admin') }}
-                                    @else
-                                        <i class="fas fa-user"></i> {{ __('users.role_user') }}
-                                    @endif
+                                <span class="badge {{ $roleBadge }}">
+                                    <i class="{{ $roleIcon }}"></i> {{ $roleName }}
                                 </span>
                             </td>
                             <td>{{ $user->Gender }}</td>

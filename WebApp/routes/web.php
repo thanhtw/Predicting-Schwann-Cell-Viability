@@ -47,6 +47,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
+// Same-origin proxy for browser progress polling. Keeping this outside the
+// role-specific groups lets both admin and permitted user training pages use it.
+Route::get('/training-progress/{sessionId}', [DatasetController::class, 'trainingProgress'])
+    ->whereUuid('sessionId')
+    ->middleware('auth')
+    ->name('training.progress');
+
 // Password Reset routes
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotPasswordForm'])->name('password.request');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');

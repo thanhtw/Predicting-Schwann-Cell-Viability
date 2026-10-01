@@ -62,11 +62,17 @@
                                     <option value="random_forest" selected>Random Forest (RF)</option>
                                     <option value="xgboost">XGBoost</option>
                                     <option value="ann">Artificial Neural Network (ANN)</option>
+                                    <option value="linear_regression">Linear Regression</option>
+                                    <option value="svr">Support Vector Regression (SVR)</option>
+                                    <option value="gradient_boosting">Gradient Boosting Regression</option>
                                 </select>
                                 <small class="text-muted">
                                     <strong>RF:</strong> {{ __('datasets.model_type_rf_desc') }} | 
                                     <strong>XGBoost:</strong> {{ __('datasets.model_type_xgb_desc') }} | 
-                                    <strong>ANN:</strong> {{ __('datasets.model_type_ann_desc') }}
+                                    <strong>ANN:</strong> {{ __('datasets.model_type_ann_desc') }} |
+                                    <strong>Linear Regression:</strong> Fast, interpretable baseline |
+                                    <strong>SVR:</strong> Flexible nonlinear regression |
+                                    <strong>Gradient Boosting:</strong> Boosted decision-tree regression
                                 </small>
                             </div>
                         </div>
@@ -76,7 +82,6 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">{{ __('datasets.training_method') }}</label>
                                 <select name="training_method" id="training_method" class="form-select">
-                                    <option value="process">{{ __('datasets.training_method_process') }}</option>
                                     <option value="api" selected>{{ __('datasets.training_method_api') }}</option>
                                 </select>
                                 <small class="text-muted">{{ __('datasets.training_method_api_note') }}</small>
@@ -113,8 +118,36 @@
                                 <div class="col-md-4">
                                     <label for="learning_rate" class="form-label">{{ __('datasets.learning_rate') }} <span class="xgboost-only text-muted">({{ __('datasets.xgboost_only') }})</span></label>
                                     <input type="number" name="learning_rate" id="learning_rate" 
-                                           class="form-control" value="0.1" min="0.001" max="1" step="0.01" disabled>
+                                           class="form-control" value="0.1" min="0.001" max="1" step="any" disabled>
                                     <small class="text-muted">{{ __('datasets.default') }}: 0.1</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Support Vector Regression Parameters -->
+                        <div id="svr_params" class="hyperparameter-group" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="svr_c" class="form-label">Regularization (C)</label>
+                                    <input type="number" name="svr_c" id="svr_c"
+                                           class="form-control" value="1.0" min="0.001" max="10000" step="any">
+                                    <small class="text-muted">Default: 1.0</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="svr_epsilon" class="form-label">Epsilon</label>
+                                    <input type="number" name="svr_epsilon" id="svr_epsilon"
+                                           class="form-control" value="0.1" min="0" max="100" step="0.01">
+                                    <small class="text-muted">Default: 0.1</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="svr_kernel" class="form-label">Kernel</label>
+                                    <select name="svr_kernel" id="svr_kernel" class="form-select">
+                                        <option value="rbf" selected>RBF</option>
+                                        <option value="linear">Linear</option>
+                                        <option value="poly">Polynomial</option>
+                                        <option value="sigmoid">Sigmoid</option>
+                                    </select>
+                                    <small class="text-muted">Default: RBF</small>
                                 </div>
                             </div>
                         </div>
@@ -260,6 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modelNameInput = document.getElementById('model_name');
     const treeParams = document.getElementById('tree_params');
     const annParams = document.getElementById('ann_params');
+    const svrParams = document.getElementById('svr_params');
     const learningRateInput = document.getElementById('learning_rate');
     const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
     const progressBar = document.getElementById('progressBar');
@@ -269,30 +303,73 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Progress modal:', progressModal);
     console.log('Train button:', trainBtn);
 
-    const PREDICT_SERVICE_URL = '{{ config("services.predict_service.url") }}';
     const DATASETS_INDEX_URL = '{{ route("admin.datasets.index") }}';
+    const PROGRESS_URL_TEMPLATE = @json(route('training.progress', ['sessionId' => '__SESSION_ID__']));
     const CSRF_TOKEN = '{{ csrf_token() }}';
     
-    console.log('PREDICT_SERVICE_URL:', PREDICT_SERVICE_URL);
     console.log('DATASETS_INDEX_URL:', DATASETS_INDEX_URL);
 
     let sessionId = null;
     let progressInterval = null;
+    let trainingFinished = false;
+
+    function finishTrainingSuccessfully() {
+        if (trainingFinished) return;
+        trainingFinished = true;
+
+        if (progressInterval) clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+        progressBar.classList.remove('progress-bar-animated', 'bg-info', 'bg-danger');
+        progressBar.classList.add('bg-success');
+        progressMessage.innerHTML = '<h6 class="mb-0 text-success"><i class="bi bi-check-circle"></i> Training completed successfully!</h6>';
+
+        setTimeout(function() {
+            progressModal.hide();
+            window.location.href = DATASETS_INDEX_URL;
+        }, 1500);
+    }
 
     // Handle model type change
     modelTypeSelect.addEventListener('change', function() {
         const modelType = this.value;
+        const usesTreeParams = ['random_forest', 'xgboost', 'gradient_boosting'].includes(modelType);
+        const usesAnnParams = modelType === 'ann';
+        const usesSvrParams = modelType === 'svr';
+
+        // Hidden form controls still participate in native browser validation.
+        // Disable controls outside the selected model so an invalid hidden
+        // value cannot silently prevent the submit event from firing.
+        treeParams.querySelectorAll('input, select').forEach(function(control) {
+            control.disabled = !usesTreeParams;
+        });
+        annParams.querySelectorAll('input, select').forEach(function(control) {
+            control.disabled = !usesAnnParams;
+        });
+        svrParams.querySelectorAll('input, select').forEach(function(control) {
+            control.disabled = !usesSvrParams;
+        });
         
         // Toggle parameter groups
-        if (modelType === 'ann') {
+        if (usesAnnParams) {
             treeParams.style.display = 'none';
             annParams.style.display = 'block';
+            svrParams.style.display = 'none';
+        } else if (usesSvrParams) {
+            treeParams.style.display = 'none';
+            annParams.style.display = 'none';
+            svrParams.style.display = 'block';
+        } else if (modelType === 'linear_regression') {
+            treeParams.style.display = 'none';
+            annParams.style.display = 'none';
+            svrParams.style.display = 'none';
         } else {
             treeParams.style.display = 'block';
             annParams.style.display = 'none';
+            svrParams.style.display = 'none';
             
             // Enable/disable learning rate for XGBoost
-            if (modelType === 'xgboost') {
+            if (modelType === 'xgboost' || modelType === 'gradient_boosting') {
                 learningRateInput.disabled = false;
             } else {
                 learningRateInput.disabled = true;
@@ -310,16 +387,30 @@ document.addEventListener('DOMContentLoaded', function() {
             prefix = 'XGB';
         } else if (modelType === 'ann') {
             prefix = 'ANN';
+        } else if (modelType === 'linear_regression') {
+            prefix = 'LR';
+        } else if (modelType === 'svr') {
+            prefix = 'SVR';
+        } else if (modelType === 'gradient_boosting') {
+            prefix = 'GBR';
         }
         
         modelNameInput.value = `${prefix}_${datasetName}_${date}`;
     });
 
+    // Synchronize visibility and disabled states for the initially selected
+    // model before the user can submit the form.
+    modelTypeSelect.dispatchEvent(new Event('change'));
+
     // Function to start progress polling
     function startProgressPolling(sid) {
         progressInterval = setInterval(async function() {
             try {
-                const response = await fetch(`/progress/${sid}`);
+                const progressUrl = PROGRESS_URL_TEMPLATE.replace('__SESSION_ID__', encodeURIComponent(sid));
+                const response = await fetch(progressUrl, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) return;
                 const data = await response.json();
                 
                 if (data.success && data.progress) {
@@ -344,15 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Check if completed or failed
                     if (progress.status === 'completed') {
-                        clearInterval(progressInterval);
-                        progressBar.classList.remove('progress-bar-animated', 'bg-info');
-                        progressBar.classList.add('bg-success');
-                        progressMessage.innerHTML = `<h6 class="mb-0 text-success"><i class="bi bi-check-circle"></i> Training completed successfully!</h6>`;
-                        
-                        setTimeout(function() {
-                            progressModal.hide();
-                            window.location.href = DATASETS_INDEX_URL;
-                        }, 3000);
+                        finishTrainingSuccessfully();
                     } else if (progress.status === 'failed') {
                         clearInterval(progressInterval);
                         progressBar.classList.remove('progress-bar-animated', 'bg-info');
@@ -382,6 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (modelType === 'random_forest') modelName = 'Random Forest';
         else if (modelType === 'xgboost') modelName = 'XGBoost';
         else if (modelType === 'ann') modelName = 'ANN';
+        else if (modelType === 'linear_regression') modelName = 'Linear Regression';
+        else if (modelType === 'svr') modelName = 'Support Vector Regression';
+        else if (modelType === 'gradient_boosting') modelName = 'Gradient Boosting';
         
         if (!confirm(`Start training ${modelName} model? This may take several minutes.`)) {
             return;
@@ -389,26 +475,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             console.log('🚀 Starting training process...');
-            console.log('Predict Service URL:', PREDICT_SERVICE_URL);
 
-            // Generate session ID
-            console.log('📝 Generating session ID...');
-            const sessionResponse = await fetch('/progress/generate-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            console.log('Session response status:', sessionResponse.status);
-            const sessionData = await sessionResponse.json();
-            console.log('Session data:', sessionData);
-            
-            if (!sessionData.success) {
-                throw new Error('Failed to generate session ID');
-            }
-            
-            sessionId = sessionData.session_id;
+            // The Python service only needs a unique identifier; generating it
+            // in the browser avoids a fragile cross-service preflight request.
+            sessionId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+                ? window.crypto.randomUUID()
+                : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+                });
             console.log('✅ Generated session ID:', sessionId);
             
             // Show progress modal
@@ -454,13 +529,17 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Training response status:', response.status);
             
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 console.error('❌ Training error:', errorData);
-                throw new Error(errorData.error || 'Training request failed');
+                const validationErrors = errorData.errors
+                    ? Object.values(errorData.errors).flat().join('\n')
+                    : null;
+                throw new Error(errorData.error || validationErrors || errorData.message || `Training request failed (${response.status})`);
             }
             
             const responseData = await response.json();
             console.log('✅ Training submitted successfully:', responseData);
+            finishTrainingSuccessfully();
             
         } catch (error) {
             console.error('❌ Error starting training:', error);
@@ -470,10 +549,6 @@ document.addEventListener('DOMContentLoaded', function() {
             progressModal.hide();
             
             // Stop polling if started
-            if (progressInterval) {
-                clearInterval(progressInterval);
-            }
-            
             if (progressInterval) {
                 clearInterval(progressInterval);
             }

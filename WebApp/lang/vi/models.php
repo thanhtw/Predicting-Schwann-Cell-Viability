@@ -12,10 +12,10 @@ return [
     // Fields
     'name' => 'Tên Mô Hình',
     'library_type' => 'Loại Thư Viện',
-    'mse' => 'MSE',
-    'mae' => 'MAE',
+    'mse' => 'MSE (0–1)',
+    'mae' => 'MAE (0–1)',
     'r2' => 'Chỉ Số R²',
-    'rmse' => 'RMSE',
+    'rmse' => 'RMSE (0–1)',
     'created_date' => 'Ngày Tạo',
     'algorithm' => 'Thuật Toán',
     'parameters' => 'Tham Số',

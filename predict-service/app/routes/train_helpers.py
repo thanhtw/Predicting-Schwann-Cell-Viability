@@ -10,6 +10,9 @@ import joblib
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
+from sklearn.ensemble import GradientBoostingRegressor
 import mlflow
 import mlflow.sklearn
 import mlflow.keras
@@ -78,6 +81,115 @@ def train_random_forest(data, dataset_path, model_name, trained_by, dataset_id, 
         tracker.update_progress(session_id, progress=95, message="Saving model and scaler files...")
     save_paths = save_model_files(model, scaler, model_name, 'sklearn', '.pkl')
     
+    return model, scaler, metrics, save_paths
+
+
+def train_linear_regression(data, dataset_path, model_name, trained_by, dataset_id, session_id=None):
+    """Train a Linear Regression model."""
+    tracker = TrainingProgressTracker()
+    if session_id:
+        tracker.start_training(session_id)
+        tracker.update_progress(session_id, progress=15, message="Loading and preprocessing dataset...")
+
+    X_train, X_test, y_train, y_test, scaler = prepare_data(
+        dataset_path, data, session_id
+    )
+
+    if session_id:
+        tracker.update_progress(session_id, progress=50, message="Training Linear Regression model...")
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    if session_id:
+        tracker.update_progress(session_id, progress=75, message="Evaluating model performance...")
+    metrics = evaluate_model(model, X_test, y_test, "LinearRegression")
+
+    if session_id:
+        tracker.update_progress(session_id, progress=85, message="Logging model to MLflow...")
+    mlflow.sklearn.log_model(model, "model", registered_model_name=f"LinearRegression_{model_name}")
+
+    if session_id:
+        tracker.update_progress(session_id, progress=95, message="Saving model and scaler files...")
+    save_paths = save_model_files(model, scaler, model_name, 'sklearn', '.pkl')
+    return model, scaler, metrics, save_paths
+
+
+def train_svr(data, dataset_path, model_name, trained_by, dataset_id, session_id=None):
+    """Train a Support Vector Regression model."""
+    tracker = TrainingProgressTracker()
+    if session_id:
+        tracker.start_training(session_id)
+        tracker.update_progress(session_id, progress=15, message="Loading and preprocessing dataset...")
+
+    X_train, X_test, y_train, y_test, scaler = prepare_data(
+        dataset_path, data, session_id
+    )
+    c_value = float(data.get('svr_c', 1.0))
+    epsilon = float(data.get('svr_epsilon', 0.1))
+    kernel = data.get('svr_kernel', 'rbf')
+
+    if session_id:
+        tracker.update_progress(session_id, progress=50, message="Training Support Vector Regression model...")
+    model = SVR(C=c_value, epsilon=epsilon, kernel=kernel)
+    model.fit(X_train, y_train)
+    mlflow.log_param("svr_c", c_value)
+    mlflow.log_param("svr_epsilon", epsilon)
+    mlflow.log_param("svr_kernel", kernel)
+
+    if session_id:
+        tracker.update_progress(session_id, progress=75, message="Evaluating model performance...")
+    metrics = evaluate_model(model, X_test, y_test, "SVR")
+
+    if session_id:
+        tracker.update_progress(session_id, progress=85, message="Logging model to MLflow...")
+    mlflow.sklearn.log_model(model, "model", registered_model_name=f"SVR_{model_name}")
+
+    if session_id:
+        tracker.update_progress(session_id, progress=95, message="Saving model and scaler files...")
+    save_paths = save_model_files(model, scaler, model_name, 'sklearn', '.pkl')
+    return model, scaler, metrics, save_paths
+
+
+def train_gradient_boosting(data, dataset_path, model_name, trained_by, dataset_id, session_id=None):
+    """Train a Gradient Boosting Regression model."""
+    tracker = TrainingProgressTracker()
+    if session_id:
+        tracker.start_training(session_id)
+        tracker.update_progress(session_id, progress=15, message="Loading and preprocessing dataset...")
+
+    X_train, X_test, y_train, y_test, scaler = prepare_data(
+        dataset_path, data, session_id
+    )
+    n_estimators = int(data.get('n_estimators', 100))
+    learning_rate = float(data.get('learning_rate', 0.1))
+    max_depth_value = data.get('max_depth', 3)
+    max_depth = int(max_depth_value) if max_depth_value not in [None, ''] else 3
+    random_state = int(data.get('random_state', 42))
+
+    if session_id:
+        tracker.update_progress(session_id, progress=50, message="Training Gradient Boosting model...")
+    model = GradientBoostingRegressor(
+        n_estimators=n_estimators,
+        learning_rate=learning_rate,
+        max_depth=max_depth,
+        random_state=random_state,
+    )
+    model.fit(X_train, y_train)
+    mlflow.log_param("n_estimators", n_estimators)
+    mlflow.log_param("learning_rate", learning_rate)
+    mlflow.log_param("max_depth", max_depth)
+
+    if session_id:
+        tracker.update_progress(session_id, progress=75, message="Evaluating model performance...")
+    metrics = evaluate_model(model, X_test, y_test, "GradientBoosting")
+
+    if session_id:
+        tracker.update_progress(session_id, progress=85, message="Logging model to MLflow...")
+    mlflow.sklearn.log_model(model, "model", registered_model_name=f"GradientBoosting_{model_name}")
+
+    if session_id:
+        tracker.update_progress(session_id, progress=95, message="Saving model and scaler files...")
+    save_paths = save_model_files(model, scaler, model_name, 'sklearn', '.pkl')
     return model, scaler, metrics, save_paths
 
 

@@ -39,6 +39,24 @@
                                 @enderror
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="role_id">{{ __('users.role_required') }}</label>
+                                <select class="form-control @error('role_id') is-invalid @enderror"
+                                        id="role_id" name="role_id" required>
+                                    <option value="">{{ __('users.select_role') }}</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}"
+                                            {{ (string) old('role_id', 2) === (string) $role->id ? 'selected' : '' }}>
+                                            {{ $role->RoleName }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('role_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="row">

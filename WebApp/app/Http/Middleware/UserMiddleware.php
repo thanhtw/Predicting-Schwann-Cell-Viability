@@ -21,22 +21,25 @@ class UserMiddleware
             return redirect()->route('login')->with('error', 'Please login to access this page.');
         }
         
-        if (Auth::user()->role->RoleCode !== 'user') {
-            // If user is logged in but not user role, show role mismatch page
+        $user = Auth::user();
+
+        // Every non-admin role uses the user portal. Access to individual
+        // features is controlled by the permission middleware on each route.
+        if (!$user->role || $user->role->RoleCode === 'admin') {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'error' => 'Access denied. User privileges required.',
+                    'error' => 'Access denied. Non-admin privileges required.',
                     'role_mismatch' => true,
-                    'current_role' => Auth::user()->role->RoleCode,
-                    'required_role' => 'user'
+                    'current_role' => $user->role?->RoleCode ?? 'none',
+                    'required_role' => 'non-admin'
                 ], 403);
             }
             
             return response()->view('errors.403', [
                 'role_mismatch' => true,
-                'current_role' => Auth::user()->role->RoleCode,
-                'required_role' => 'user',
-                'user_name' => Auth::user()->FullName
+                'current_role' => $user->role?->RoleCode ?? 'none',
+                'required_role' => 'non-admin',
+                'user_name' => $user->FullName
             ], 403);
         }
 

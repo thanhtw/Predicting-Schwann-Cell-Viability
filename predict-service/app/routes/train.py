@@ -39,6 +39,9 @@ from app.routes.train_helpers import (
     train_random_forest,
     train_xgboost,
     train_ann,
+    train_linear_regression,
+    train_svr,
+    train_gradient_boosting,
     prepare_data,
     evaluate_model,
     save_model_files
@@ -155,7 +158,7 @@ except ImportError:
 })
 def train_model():
     """
-    Train a new ML model (Random Forest, XGBoost, or ANN)
+    Train a supported regression model.
     """
     try:
         data = request.get_json()
@@ -214,6 +217,18 @@ def train_model():
                 )
             elif model_type == 'ann':
                 model, scaler, metrics, save_paths = train_ann(
+                    data, dataset_path, model_name, trained_by, dataset_id, session_id
+                )
+            elif model_type == 'linear_regression':
+                model, scaler, metrics, save_paths = train_linear_regression(
+                    data, dataset_path, model_name, trained_by, dataset_id, session_id
+                )
+            elif model_type == 'svr':
+                model, scaler, metrics, save_paths = train_svr(
+                    data, dataset_path, model_name, trained_by, dataset_id, session_id
+                )
+            elif model_type == 'gradient_boosting':
+                model, scaler, metrics, save_paths = train_gradient_boosting(
                     data, dataset_path, model_name, trained_by, dataset_id, session_id
                 )
             else:

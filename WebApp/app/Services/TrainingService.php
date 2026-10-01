@@ -367,13 +367,17 @@ class TrainingService
             // Add model-specific parameters
             $modelType = $options['model_type'] ?? 'random_forest';
             
-            if ($modelType === 'random_forest' || $modelType === 'xgboost') {
+            if (in_array($modelType, ['random_forest', 'xgboost', 'gradient_boosting'], true)) {
                 $requestData['n_estimators'] = $options['n_estimators'] ?? 100;
                 $requestData['max_depth'] = $options['max_depth'] ?? null;
                 
-                if ($modelType === 'xgboost') {
+                if ($modelType === 'xgboost' || $modelType === 'gradient_boosting') {
                     $requestData['learning_rate'] = $options['learning_rate'] ?? 0.1;
                 }
+            } elseif ($modelType === 'svr') {
+                $requestData['svr_c'] = $options['svr_c'] ?? 1.0;
+                $requestData['svr_epsilon'] = $options['svr_epsilon'] ?? 0.1;
+                $requestData['svr_kernel'] = $options['svr_kernel'] ?? 'rbf';
             } elseif ($modelType === 'ann') {
                 $requestData['hidden_layers'] = $options['hidden_layers'] ?? '64,32,16';
                 $requestData['epochs'] = $options['epochs'] ?? 100;
